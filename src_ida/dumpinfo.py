@@ -10,6 +10,68 @@ import ida_name
 import ida_ida
 import ida_idaapi
 import ida_segment
+import ida_typeinf
+
+
+def describe_callingconvention(cc):
+    #https://www.hex-rays.com/products/ida/support/sdkdoc/group___c_m___c_c__.html
+    if cc == 0x00:
+        return 'invalid'
+    elif cc == 0x10:
+        return 'unknown'
+    elif cc == 0x20:
+        return 'voidarg'
+    elif cc == 0x30:
+        return 'cdecl'
+    elif cc == 0x40:
+        return 'cdecl_ellipsis'
+    elif cc == 0x50:
+        return 'stdcall'
+    elif cc == 0x60:
+        return 'pascal'
+    elif cc == 0x70:
+        return 'fastcall'
+    elif cc == 0x80:
+        return 'thiscall'
+    elif cc == 0x90:
+        return 'manual'
+    elif cc == 0xA0:
+        return 'spoiled'
+    elif cc == 0xB0:
+        return 'reserved'
+    elif cc == 0xC0:
+        return 'reserved'
+    elif cc == 0xD0:
+        return 'special_ellipsis'
+    elif cc == 0xE0:
+        return 'special_pstack'
+    elif cc == 0xF0:
+        return 'special'
+
+    return None
+        
+
+def describe_argloc(location):
+    #https://www.hex-rays.com/products/ida/support/sdkdoc/group___a_l_o_c__.html
+    if location == 0:
+        return 'none'
+    elif location == 1:
+        return 'stack'
+    elif location == 2:
+        return 'distributed'
+    elif location == 3:
+        return 'register_one'
+    elif location == 4:
+        return 'register_pair'
+    elif location == 5:
+        return 'register_relative'
+    elif location == 6:
+        return 'global_address'
+    else:
+        return 'custom'
+    
+    return None
+
 
 def processSegments():
     segments = list()
@@ -23,7 +85,33 @@ def processSegments():
             segments.append(segm)
 
     return segments
+
+def processFunctionTypeinfo(function):
+
+    tinfo = ida_typeinf.tinfo_t()
+    func_type_data = ida_typeinf.func_type_data_t()
+    tinfo.get_named_type
+    ida_typeinf.guess_tinfo(function['start_ea'],tinfo)
+    tinfo.get_func_details(func_type_data)
+
+    #calling convention
+    function['calling_convention'] = describe_callingconvention(func_type_data.cc)
+    func_type_data.rettype
     
+    #return tpye
+    function['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
+
+    #arguments
+    arguments = list()
+    for funcarg in func_type_data:
+        arginfo = dict()
+        arginfo['name'] = funcarg.name
+        arginfo['type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, funcarg.type, '', '') 
+        arginfo['argument_location'] = describe_argloc(funcarg.argloc.atype())
+        arguments.append(arginfo)
+
+    function['arguments'] = arguments
+
 def processFunctions():
     functions = list()
 
@@ -47,6 +135,8 @@ def processFunctions():
         function['name'] = ida_funcs.get_func_name(func.start_ea)
         function['is_public'] = ida_name.is_public_name(func.start_ea)
         function['is_autonamed'] = flags & ida_bytes.FF_LABL != 0
+
+        processFunctionTypeinfo(function)
 
         functions.append(function)
 
