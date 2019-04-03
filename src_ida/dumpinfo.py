@@ -53,7 +53,7 @@ def describe_callingconvention(cc):
 
 def describe_argloc(location):
     #https://www.hex-rays.com/products/ida/support/sdkdoc/group___a_l_o_c__.html
-    if location == 0:
+    if   location == 0:
         return 'none'
     elif location == 1:
         return 'stack'
@@ -75,13 +75,16 @@ def describe_argloc(location):
 
 def processSegments():
     segments = list()
-    for n in range(ida_segment.get_segm_qty()):
+    
+    for n in xrange(ida_segment.get_segm_qty()):
         seg = ida_segment.getnseg(n)
         if seg:
-            segm = dict()
-            segm['name'] = ida_segment.get_segm_name(seg)
-            segm['start_ea'] = seg.start_ea  
-            segm['class'] = ida_segment.get_segm_class(seg)
+            segm = {
+                'name'     : ida_segment.get_segm_name(seg),
+                'start_ea' : seg.start_ea,
+                'class'    : ida_segment.get_segm_class(seg)
+            }
+            
             segments.append(segm)
 
     return segments
@@ -103,11 +106,14 @@ def processFunctionTypeinfo(function):
 
     #arguments
     arguments = list()
+    
     for funcarg in func_type_data:
-        arginfo = dict()
-        arginfo['name'] = funcarg.name
-        arginfo['type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, funcarg.type, '', '') 
-        arginfo['argument_location'] = describe_argloc(funcarg.argloc.atype())
+        arginfo = {
+            'name'              : funcarg.name,
+            'type'              : ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, funcarg.type, '', ''),
+            'argument_location' : describe_argloc(funcarg.argloc.atype())
+        }
+        
         arguments.append(arginfo)
 
     function['arguments'] = arguments
@@ -116,31 +122,35 @@ def processFunctions():
     functions = list()
 
     start = ida_ida.cvar.inf.min_ea
-    end = ida_ida.cvar.inf.max_ea
+    end   = ida_ida.cvar.inf.max_ea
 
     # find first function head chunk in the range
     chunk = ida_funcs.get_fchunk(start)
+    
     if not chunk:
         chunk = ida_funcs.get_next_fchunk(start)
     while chunk and chunk.start_ea < end and (chunk.flags & ida_funcs.FUNC_TAIL) != 0:
         chunk = ida_funcs.get_next_fchunk(chunk.start_ea)
+    
     func = chunk
 
     while func and func.start_ea < end:
-        function = dict()
+        start_ea = func.start_ea
+        
+        flags = ida_bytes.get_full_flags(start_ea)
 
-        flags = ida_bytes.get_full_flags(func.start_ea)
-
-        function['start_ea'] = func.start_ea
-        function['name'] = ida_funcs.get_func_name(func.start_ea)
-        function['is_public'] = ida_name.is_public_name(func.start_ea)
-        function['is_autonamed'] = flags & ida_bytes.FF_LABL != 0
+        function = {
+            'start_ea'     : start_ea,
+            'name'         : ida_funcs.get_func_name(start_ea),
+            'is_public'    : ida_name.is_public_name(start_ea),
+            'is_autonamed' : flags & ida_bytes.FF_LABL != 0
+        }
 
         processFunctionTypeinfo(function)
 
         functions.append(function)
 
-        func = ida_funcs.get_next_func(func.start_ea)
+        func = ida_funcs.get_next_func(start_ea)
 
     return functions
 
@@ -149,11 +159,14 @@ def processNames():
     names = list()
 
     for i in xrange(ida_name.get_nlist_size()):
-        name = dict()
-        name['ea']   = ida_name.get_nlist_ea(i)
-        name['name'] = ida_name.get_nlist_name(i)
-        name['is_public'] = ida_name.is_public_name(name['ea'])
-        name['is_func'] = ida_funcs.get_func(name['ea']) is not None
+        ea = ida_name.get_nlist_ea(i)
+        
+        name = {
+            'ea'        : ea,
+            'name'      : ida_name.get_nlist_name(i),
+            'is_public' : ida_name.is_public_name(ea),
+            'is_func'   : ida_funcs.get_func(ea) is not None
+        }
 
         names.append(name)
 
@@ -164,10 +177,11 @@ def main():
     pre, ext = os.path.splitext(filepath)
     filepath = pre + ".json"
 
-    output = dict()
-    output['segments'] = processSegments()
-    output['functions'] = processFunctions()
-    output['names'] = processNames()
+    output = {
+        'segments'  : processSegments(),
+        'functions' : processFunctions(),
+        'names'     : processNames()
+    }
 
     with open(filepath, "w") as f:
         json.dump(output, f, indent=4)
