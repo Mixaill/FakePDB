@@ -71,7 +71,7 @@ void PdbCreator::Initialize()
     DbiBuilder.setBuildNumber(14, 11);
 }
 
-void PdbCreator::AddNatvisFile(std::experimental::filesystem::path& path)
+void PdbCreator::AddNatvisFile(std::filesystem::path& path)
 {
     llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> DataOrErr = llvm::MemoryBuffer::getFile(path.string());
     _pdbBuilder.addInjectedSource(path.string(), std::move(*DataOrErr));
@@ -88,12 +88,16 @@ void PdbCreator::ImportIDA(IdaDb& ida_db)
     //GSI
     processGSI(ida_db);
 
+    //Symbols
+    processSymbols();
+
     //Sections
     processSections();
 }
 
-void PdbCreator::Commit(std::experimental::filesystem::path& path)
+void PdbCreator::Commit(std::filesystem::path& path)
 {
+	std::filesystem::create_directories(path.parent_path());
     _pdbBuilder.commit(path.string(), &_pdbBuilder.getInfoBuilder().getGuid());
 }
 
@@ -157,6 +161,22 @@ void PdbCreator::processSections()
     // Add COFF section header stream.
     auto sectionsTable = llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(sections.begin()), reinterpret_cast<const uint8_t*>(sections.end()));
     DbiBuilder.addDbgStream(llvm::pdb::DbgHeaderType::SectionHdr, sectionsTable);
+}
+
+void PdbCreator::processSymbols()
+{
+	/*
+    auto& DbiBuilder = _pdbBuilder.getDbiBuilder();
+
+    auto& ModuleDBI = DbiBuilder.addModuleInfo("main.obj");
+    ModuleDBI->setObjFileName("main.obj");
+    uint32_t Modi = ModuleDBI->getModuleIndex();
+
+    llvm::codeview::CVSymbol sym;
+    llvm::codeview::CVSymbol::CVRecord()
+    sym.kind = llvm::codeview::SymbolKind::S_GPROC32;
+    ModuleDBI->addSymbol(sym);
+	*/
 }
 
 llvm::codeview::PublicSym32 PdbCreator::createPublicSymbol(IdaFunction& idaFunc)

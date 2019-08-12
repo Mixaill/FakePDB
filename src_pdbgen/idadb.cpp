@@ -20,7 +20,7 @@
 
 #include <fstream>
 
-IdaDb::IdaDb(std::experimental::filesystem::path& filepath)
+IdaDb::IdaDb(std::filesystem::path& filepath)
 {
     load(filepath);
 }
@@ -35,9 +35,12 @@ std::vector<IdaName>& IdaDb::Names()
     return _names;
 }
 
-void IdaDb::load(std::experimental::filesystem::path& filepath)
+void IdaDb::load(std::filesystem::path& filepath)
 {
     std::ifstream istream(filepath);
+	if (!istream.is_open()) {
+		return;
+	}
     nlohmann::json json;
     istream >> json;
 

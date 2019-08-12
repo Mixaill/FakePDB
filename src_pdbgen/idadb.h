@@ -36,11 +36,11 @@ struct IdaName {
 
 class IdaDb {
 public:
-    explicit IdaDb(std::experimental::filesystem::path& filepath);
+    explicit IdaDb(std::filesystem::path& filepath);
     std::vector<IdaFunction>& Functions();
     std::vector<IdaName>& Names();
 private:
-    void load(std::experimental::filesystem::path& filepath);
+    void load(std::filesystem::path& filepath);
 
     std::vector<IdaFunction> _functions;
     std::vector<IdaName> _names;

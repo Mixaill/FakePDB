@@ -14,19 +14,28 @@
    limitations under the License.
 **/
 
+#include <filesystem>
 #include <iostream>
 
 #include "pdbcreator.h"
+#include "guidhelper.h"
+#include "hexhelper.h"
 #include "idadb.h"
 
 void processInput(const char* filepath) {
     std::cout << filepath << std::endl;
-    std::experimental::filesystem::path pathExe(filepath);
-    std::experimental::filesystem::path pathJson = pathExe;
-    pathJson.replace_extension(".json");
+    std::filesystem::path pathExe(filepath);
+	if (!std::filesystem::exists(pathExe)) {
+		std::cerr << ".exe file does not exists";
+		return;
+	}
 
-    std::experimental::filesystem::path pathPdb = pathExe;
-    pathPdb.replace_extension(".pdb");
+	std::filesystem::path pathJson = pathExe;
+	pathJson += ".json";
+	if (!std::filesystem::exists(pathJson)) {
+		std::cerr << ".exe file does not exists";
+		return;
+	}
 
     PeFile pefile(pathExe);
     IdaDb ida_db(pathJson);
@@ -36,7 +45,12 @@ void processInput(const char* filepath) {
 
     creator.ImportIDA(ida_db);
 
+	auto pathPdb = pathExe.parent_path() / "output"  / pathExe.filename().replace_extension(".pdb") / (guidToHex(pefile.GetPdbGuid()) + std::to_string(pefile.GetPdbAge())) / pathExe.filename().replace_extension(".pdb");
     creator.Commit(pathPdb);
+
+	auto pathExeOut = pathExe.parent_path() / "output" / pathExe.filename() / (intToHex(pefile.GetTimestamp())+intToHex(pefile.GetImageSize())) / pathExe.filename();
+	std::filesystem::create_directories(pathExeOut.parent_path());
+	std::filesystem::copy_file(pathExe, pathExeOut, std::filesystem::copy_options::overwrite_existing);
 }
 
 int main(int argc, char* argv[]) {

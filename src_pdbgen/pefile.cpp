@@ -19,7 +19,7 @@
 
 #include <llvm/Support/Error.h>
 
-PeFile::PeFile(std::experimental::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
+PeFile::PeFile(std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
 {
     _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>(_binary.get().getBinary());
 }
@@ -35,10 +35,14 @@ std::vector<uint8_t> PeFile::GetPdbGuid()
 
 uint32_t PeFile::GetPdbAge()
 {
-    const llvm::codeview::DebugInfo* DebugInfo;
+	const llvm::codeview::DebugInfo* DebugInfo = nullptr;
     llvm::StringRef PDBFileName;
 
     _obj->getDebugPDBInfo(DebugInfo, PDBFileName);
+	if (DebugInfo == nullptr) {
+		return 0;
+	}
+
     return DebugInfo->PDB70.Age;
 }
 
@@ -92,4 +96,16 @@ uint32_t PeFile::GetSectionOffsetForRVA(uint32_t RVA)
     }
 
     return 0;
+}
+
+uint32_t PeFile::GetTimestamp()
+{
+	return _obj->getTimeDateStamp();
+}
+
+uint32_t PeFile::GetImageSize()
+{
+	const llvm::object::pe32_header* pe32 = nullptr;
+	_obj->getPE32Header(pe32);
+	return pe32->SizeOfImage;
 }

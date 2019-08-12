@@ -27,7 +27,7 @@
 
 class PeFile {
 public:
-    PeFile(std::experimental::filesystem::path& path);
+    PeFile(std::filesystem::path& path);
 
     std::vector<uint8_t> GetPdbGuid();
     uint32_t GetPdbAge();
@@ -38,6 +38,10 @@ public:
     uint16_t GetSectionIndexForRVA(uint32_t RVA);
 
     uint32_t GetSectionOffsetForRVA(uint32_t RVA);
+
+	uint32_t GetTimestamp();
+
+	uint32_t GetImageSize();
 
 private:
     

@@ -38,11 +38,11 @@ public:
 
     void Initialize();
 
-    void AddNatvisFile(std::experimental::filesystem::path& path);
+    void AddNatvisFile(std::filesystem::path& path);
 
     void ImportIDA(IdaDb& ida_db);
 
-    void Commit(std::experimental::filesystem::path& path);
+    void Commit(std::filesystem::path& path);
 
 private:
     void addTypeInfo(llvm::pdb::TpiStreamBuilder& TpiBuilder);
@@ -50,6 +50,8 @@ private:
     void processGSI(IdaDb& ida_db);
 
     void processSections();
+
+    void processSymbols();
 
     llvm::codeview::PublicSym32 createPublicSymbol(IdaFunction& idaFunc);
     llvm::codeview::PublicSym32 createPublicSymbol(IdaName& idaName);
