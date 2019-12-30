@@ -110,11 +110,16 @@ uint32_t PeFile::GetTimestamp()
 
 uint32_t PeFile::GetImageSize()
 {
-	const llvm::object::pe32_header* pe32 = nullptr;
-	_obj->getPE32Header(pe32);
-	return pe32->SizeOfImage;
-}
+    auto* pe32 = _obj->getPE32Header();
+    if (pe32) {
+        return pe32->SizeOfImage;
+    }
 
+    auto* pe32plus = _obj->getPE32PlusHeader();
+    if (pe32plus) {
+        return pe32plus->SizeOfImage;
+    }
+}
 
 llvm::COFF::MachineTypes PeFile::GetMachine()
 {
