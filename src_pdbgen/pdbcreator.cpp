@@ -66,7 +66,7 @@ bool PdbCreator::Initialize()
     auto& DbiBuilder = _pdbBuilder.getDbiBuilder();
     DbiBuilder.setAge(InfoBuilder.getAge());
     DbiBuilder.setVersionHeader(llvm::pdb::PdbDbiV70);
-    DbiBuilder.setMachineType(llvm::pdb::PDB_Machine::x86);
+    DbiBuilder.setMachineType(_pefile.GetMachine());
 
     // Technically we are not link.exe 14.11, but there are known cases where
     // debugging tools on Windows expect Microsoft-specific version numbers or
