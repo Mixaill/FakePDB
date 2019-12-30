@@ -21,14 +21,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(LLVM REQUIRED CONFIG)
 
-include_directories(${LLVM_INCLUDE_DIRS})
-
-set(PDBGEN_SOURCES
-
-	guidhelper.h
-	hexhelper.h
-
-    main.cpp
+add_library(pdbgen_common STATIC)
+target_sources(pdbgen_common PRIVATE
+    guidhelper.h
+    hexhelper.h
 
     pefile.cpp
     pefile.h
@@ -39,10 +35,18 @@ set(PDBGEN_SOURCES
     pdbcreator.cpp
     pdbcreator.h
 )
-
-add_executable(pdbgen ${PDBGEN_SOURCES})
-
-target_include_directories(pdbgen PRIVATE "include")
+target_include_directories(pdbgen_common PUBLIC ${LLVM_INCLUDE_DIRS})
+target_include_directories(pdbgen_common PUBLIC "include")
+target_include_directories(pdbgen_common PUBLIC ".")
 
 llvm_map_components_to_libnames(llvm_libs core support DebugInfoPDB)
-target_link_libraries(pdbgen ${llvm_libs})
+target_link_libraries(pdbgen_common ${llvm_libs})
+
+add_executable(pdbgen)
+target_sources(pdbgen PRIVATE main.cpp)
+target_link_libraries(pdbgen PRIVATE pdbgen_common)
+
+add_executable(pdbgen_test_pefile_1)
+target_sources(pdbgen_test_pefile_1 PRIVATE "test/test_pefile_1.cpp")
+target_link_libraries(pdbgen_test_pefile_1 PRIVATE pdbgen_common)
+
