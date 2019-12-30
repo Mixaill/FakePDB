@@ -43,6 +43,8 @@ public:
 
 	uint32_t GetImageSize();
 
+    llvm::COFF::MachineTypes GetMachine();
+
 private:
     
     llvm::Expected<llvm::object::OwningBinary<llvm::object::Binary>> _binary;

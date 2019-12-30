@@ -109,3 +109,9 @@ uint32_t PeFile::GetImageSize()
 	_obj->getPE32Header(pe32);
 	return pe32->SizeOfImage;
 }
+
+
+llvm::COFF::MachineTypes PeFile::GetMachine()
+{
+    return static_cast<llvm::COFF::MachineTypes>(_obj->getMachine());
+}
