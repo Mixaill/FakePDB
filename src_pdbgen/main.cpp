@@ -33,7 +33,7 @@ void processInput(const char* filepath) {
 	std::filesystem::path pathJson = pathExe;
 	pathJson += ".json";
 	if (!std::filesystem::exists(pathJson)) {
-		std::cerr << ".exe file does not exists";
+		std::cerr << ".json file does not exists";
 		return;
 	}
 
@@ -45,7 +45,7 @@ void processInput(const char* filepath) {
 
     creator.ImportIDA(ida_db);
 
-	auto pathPdb = pathExe.parent_path() / "output"  / pathExe.filename().replace_extension(".pdb") / (guidToHex(pefile.GetPdbGuid()) + std::to_string(pefile.GetPdbAge())) / pathExe.filename().replace_extension(".pdb");
+	auto pathPdb = pathExe.parent_path() / "output"  / pefile.GetPdbFilename() / (guidToHex(pefile.GetPdbGuid()) + std::to_string(pefile.GetPdbAge())) / pefile.GetPdbFilename();
     creator.Commit(pathPdb);
 
 	auto pathExeOut = pathExe.parent_path() / "output" / pathExe.filename() / (intToHex(pefile.GetTimestamp())+intToHex(pefile.GetImageSize())) / pathExe.filename();
