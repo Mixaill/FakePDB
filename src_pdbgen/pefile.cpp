@@ -46,13 +46,18 @@ uint32_t PeFile::GetPdbAge()
     return DebugInfo->PDB70.Age;
 }
 
-std::string PeFile::GetPdbFilepath()
+std::filesystem::path PeFile::GetPdbFilepath()
 {
     const llvm::codeview::DebugInfo* DebugInfo;
     llvm::StringRef PDBFileName;
 
     _obj->getDebugPDBInfo(DebugInfo, PDBFileName);
-    return std::string(PDBFileName);
+    return std::filesystem::path(std::string(PDBFileName));
+}
+
+std::filesystem::path PeFile::GetPdbFilename()
+{
+    return GetPdbFilepath().filename();
 }
 
 llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders()
