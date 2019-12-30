@@ -191,7 +191,7 @@ def processNames():
 def main():
     filepath = ida_loader.get_path(ida_loader.PATH_TYPE_IDB)
     pre, ext = os.path.splitext(filepath)
-    filepath = pre + ".json"
+    filepath = pre + ".exe.json"
 
     output = {
         'segments'  : processSegments(),
