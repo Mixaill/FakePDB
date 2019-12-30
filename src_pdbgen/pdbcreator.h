@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include <llvm/Support/Allocator.h>
-
 #include <llvm/DebugInfo/CodeView/SymbolRecord.h>
 
 #include <llvm/DebugInfo/MSF/MSFBuilder.h>
@@ -36,20 +34,20 @@ public:
 
     PdbCreator(PeFile& peFile);
 
-    void Initialize();
+    bool Initialize();
 
     void AddNatvisFile(std::filesystem::path& path);
 
     void ImportIDA(IdaDb& ida_db);
 
-    void Commit(std::filesystem::path& path);
+    bool Commit(std::filesystem::path& path);
 
 private:
     void addTypeInfo(llvm::pdb::TpiStreamBuilder& TpiBuilder);
 
     void processGSI(IdaDb& ida_db);
 
-    void processSections();
+    bool processSections();
 
     void processSymbols();
 

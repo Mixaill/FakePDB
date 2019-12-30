@@ -21,7 +21,9 @@
 
 PeFile::PeFile(std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
 {
-    _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>(_binary.get().getBinary());
+    if (!_binary.takeError()) {
+        _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>((*_binary).getBinary());
+    }
 }
 
 std::vector<uint8_t> PeFile::GetPdbGuid()

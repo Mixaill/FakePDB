@@ -37,14 +37,18 @@ PdbCreator::PdbCreator(PeFile& pefile) : _pefile(pefile),  _pdbBuilder(_allocato
 {
 }
 
-void PdbCreator::Initialize()
+bool PdbCreator::Initialize()
 {
     //initialize builder
-    _pdbBuilder.initialize(4096);
-
+    if (_pdbBuilder.initialize(4096)) {
+        return false;
+    }
+    
     // Create streams in MSF for predefined streams, namely PDB, TPI, DBI and IPI.
     for (int I = 0; I < (int)llvm::pdb::kSpecialStreamCount; ++I) {
-        _pdbBuilder.getMsfBuilder().addStream(0);
+        if (_pdbBuilder.getMsfBuilder().addStream(0).takeError()) {
+            return false;
+        }
     }
 
     // Add an Info stream.
@@ -69,6 +73,8 @@ void PdbCreator::Initialize()
     // they fail to work at all.  Since we know we produce PDBs that are
     // compatible with LINK 14.11, we set that version number here.
     DbiBuilder.setBuildNumber(14, 11);
+
+    return true;
 }
 
 void PdbCreator::AddNatvisFile(std::filesystem::path& path)
@@ -95,10 +101,14 @@ void PdbCreator::ImportIDA(IdaDb& ida_db)
     processSections();
 }
 
-void PdbCreator::Commit(std::filesystem::path& path)
+bool PdbCreator::Commit(std::filesystem::path& path)
 {
 	std::filesystem::create_directories(path.parent_path());
-    _pdbBuilder.commit(path.string(), &_pdbBuilder.getInfoBuilder().getGuid());
+    if (_pdbBuilder.commit(path.string(), &_pdbBuilder.getInfoBuilder().getGuid())) {
+        return false;
+    }
+
+    return true;
 }
 
 void PdbCreator::addTypeInfo(llvm::pdb::TpiStreamBuilder& TpiBuilder) {
@@ -149,7 +159,7 @@ void PdbCreator::processGSI(IdaDb& ida_db)
     }
 }
 
-void PdbCreator::processSections()
+bool PdbCreator::processSections()
 {
     auto& DbiBuilder = _pdbBuilder.getDbiBuilder();
 
@@ -160,7 +170,11 @@ void PdbCreator::processSections()
 
     // Add COFF section header stream.
     auto sectionsTable = llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(sections.begin()), reinterpret_cast<const uint8_t*>(sections.end()));
-    DbiBuilder.addDbgStream(llvm::pdb::DbgHeaderType::SectionHdr, sectionsTable);
+    if (DbiBuilder.addDbgStream(llvm::pdb::DbgHeaderType::SectionHdr, sectionsTable)) {
+        return false;
+    }
+
+    return true;
 }
 
 void PdbCreator::processSymbols()
