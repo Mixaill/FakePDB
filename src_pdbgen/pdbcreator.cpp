@@ -165,8 +165,8 @@ bool PdbCreator::processSections()
 
     // Add Section Map stream.
     auto sections = _pefile.GetSectionHeaders();
-    auto SectionMap = llvm::pdb::DbiStreamBuilder::createSectionMap(sections);
-    DbiBuilder.setSectionMap(SectionMap);
+    _sectionMap = llvm::pdb::DbiStreamBuilder::createSectionMap(sections);
+    DbiBuilder.setSectionMap(_sectionMap);
 
     // Add COFF section header stream.
     auto sectionsTable = llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(sections.begin()), reinterpret_cast<const uint8_t*>(sections.end()));

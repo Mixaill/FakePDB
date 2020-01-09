@@ -58,5 +58,5 @@ private:
 
     llvm::BumpPtrAllocator _allocator;
     llvm::pdb::PDBFileBuilder _pdbBuilder;
-
+    std::vector<llvm::pdb::SecMapEntry> _sectionMap;
 };
