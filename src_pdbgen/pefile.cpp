@@ -19,7 +19,7 @@
 
 #include <llvm/Support/Error.h>
 
-PeFile::PeFile(std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
+PeFile::PeFile(const std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
 {
     if (!_binary.takeError()) {
         _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>((*_binary).getBinary());
