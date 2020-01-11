@@ -2,7 +2,7 @@
 
 #include "pefile.h"
 
-void peinfo(std::filesystem::path& path) {
+void peinfo(const std::filesystem::path& path) {
 	PeFile pefile(path);
 	std::cout << "ImageSize   : " << pefile.GetImageSize()   << std::endl;
 	std::cout << "PdbAge      : " << pefile.GetPdbAge()      << std::endl;

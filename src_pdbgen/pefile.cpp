@@ -19,7 +19,7 @@
 
 #include <llvm/Support/Error.h>
 
-PeFile::PeFile(std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
+PeFile::PeFile(const std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
 {
     if (!_binary.takeError()) {
         _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>((*_binary).getBinary());
@@ -32,6 +32,9 @@ std::vector<uint8_t> PeFile::GetPdbGuid()
     llvm::StringRef PDBFileName;
 
     _obj->getDebugPDBInfo(DebugInfo, PDBFileName);
+    if (!DebugInfo)
+        return std::vector<uint8_t>(16);
+
     return std::vector<uint8_t>(&DebugInfo->PDB70.Signature[0], &DebugInfo->PDB70.Signature[16]);
 }
 

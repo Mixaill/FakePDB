@@ -67,6 +67,7 @@ bool PdbCreator::Initialize()
     DbiBuilder.setAge(InfoBuilder.getAge());
     DbiBuilder.setVersionHeader(llvm::pdb::PdbDbiV70);
     DbiBuilder.setMachineType(_pefile.GetMachine());
+    DbiBuilder.setFlags(llvm::pdb::DbiFlags::FlagStrippedMask);
 
     // Technically we are not link.exe 14.11, but there are known cases where
     // debugging tools on Windows expect Microsoft-specific version numbers or
@@ -165,8 +166,8 @@ bool PdbCreator::processSections()
 
     // Add Section Map stream.
     auto sections = _pefile.GetSectionHeaders();
-    auto SectionMap = llvm::pdb::DbiStreamBuilder::createSectionMap(sections);
-    DbiBuilder.setSectionMap(SectionMap);
+    _sectionMap = llvm::pdb::DbiStreamBuilder::createSectionMap(sections);
+    DbiBuilder.setSectionMap(_sectionMap);
 
     // Add COFF section header stream.
     auto sectionsTable = llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(sections.begin()), reinterpret_cast<const uint8_t*>(sections.end()));

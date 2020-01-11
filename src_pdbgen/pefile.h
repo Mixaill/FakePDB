@@ -27,7 +27,7 @@
 
 class PeFile {
 public:
-    PeFile(std::filesystem::path& path);
+    PeFile(const std::filesystem::path& path);
 
     std::vector<uint8_t> GetPdbGuid();
     
