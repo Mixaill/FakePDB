@@ -45,7 +45,7 @@ void processInput(const char* filepath) {
 
     creator.ImportIDA(ida_db);
 
-	auto pathPdb = pathExe.parent_path() / "output"  / pefile.GetPdbFilename() / (guidToHex(pefile.GetPdbGuid()) + std::to_string(pefile.GetPdbAge())) / pefile.GetPdbFilename();
+	auto pathPdb = pathExe.parent_path() / "output"  / pefile.GetPdbFilename() / (guidToHex(pefile.GetPdbGuid()) + intToHex(pefile.GetPdbAge())) / pefile.GetPdbFilename();
     creator.Commit(pathPdb);
 
 	auto pathExeOut = pathExe.parent_path() / "output" / pathExe.filename() / (intToHex(pefile.GetTimestamp())+intToHex(pefile.GetImageSize())) / pathExe.filename();
