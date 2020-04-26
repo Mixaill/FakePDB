@@ -11,7 +11,7 @@ Based on:
 
 ## How to use
 
-1. Compile `pdbgen` (requires LLVM)
+1. Compile `pdbgen` (requires LLVM 10, but LLVM git master preferable)
 
 2. Generate IDA dump
     * Open target executable in IDA >= 7.0
