@@ -29,6 +29,19 @@ import ida_segment
 import ida_typeinf
 
 
+
+#
+# general
+#
+
+def processGaneral():
+    result = dict()
+
+    result['filename'] = ida_nalt.get_root_filename()
+
+    return result
+
+
 def describe_callingconvention(cc):
     #https://www.hex-rays.com/products/ida/support/sdkdoc/group___c_m___c_c__.html
     if cc == 0x00:
@@ -98,7 +111,8 @@ def processSegments():
             segm = {
                 'name'     : ida_segment.get_segm_name(seg),
                 'start_ea' : seg.start_ea,
-                'class'    : ida_segment.get_segm_class(seg)
+                'class'    : ida_segment.get_segm_class(seg),
+                'selector' : seg.sel
             }
             
             segments.append(segm)
@@ -196,6 +210,7 @@ def main():
     filepath = pre + ".exe.json"
 
     output = {
+        'general'   : processGaneral(), 
         'segments'  : processSegments(),
         'functions' : processFunctions(),
         'names'     : processNames()
