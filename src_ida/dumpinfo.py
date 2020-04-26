@@ -31,6 +31,15 @@ import ida_typeinf
 import ida_ua
 import ida_xref
 
+#
+# OPTIONS
+#
+
+SIGNSEARCH_ENABLE    = False         # enable signature search
+SIGNSEARCH_ENABLE_AUTONAMED = False  # search signature for autonamed functions
+SIGNSEARCH_MINLENGTH = 1             # minimal length of signature
+SIGNSEARCH_FILTER = ''               # filter by name (function name should contains this substring)
+
 
 #
 # signatures search
@@ -92,30 +101,34 @@ def signature_add_instruction(instruction):
 
     return strSig
 
-def signature_get_function_sig(func_ea):
+def signature_get_function_sig(func_ea, func_name, func_autonamed):
+
+    if func_autonamed and not SIGNSEARCH_ENABLE_AUTONAMED:
+        return ''
+
+    if SIGNSEARCH_FILTER and not SIGNSEARCH_FILTER in func_name:
+        return ''
+        
     signature_str = ''
-    
     current_addr = func_ea
     while True:
         instruction  = ida_ua.insn_t()
         instruction_len = ida_ua.decode_insn(instruction, current_addr)
         if not instruction_len:
-            print 'failed to decode instruction'
             return ''
 
         signature_str += signature_add_instruction(instruction)
 
-        rescount = signature_search_rescount(signature_str)
-        if rescount == 0:
-            print '%s: failed to find signature (%s) ' % (hex(func_ea), signature_str)
-            return ''
+        if current_addr - func_ea >= SIGNSEARCH_MINLENGTH:
+            rescount = signature_search_rescount(signature_str)
+            if rescount == 0:
+                return ''
 
-        if rescount == 1:
-            break
+            if rescount == 1:
+                break
 
         current_addr = current_addr + instruction_len
 
-    print '%s : sig found (%s)' % (hex(func_ea), signature_str)
     return signature_str.strip()
 
 
@@ -256,14 +269,16 @@ def processFunctions():
     while func and func.start_ea < end:
         start_ea = func.start_ea
         
-        flags = ida_bytes.get_full_flags(start_ea)
+        func_flags = ida_bytes.get_full_flags(start_ea)
+        func_name = ida_funcs.get_func_name(start_ea)
+        func_autonamed = func_flags & ida_bytes.FF_LABL != 0
 
         function = {
             'start_ea'     : start_ea,
-            'name'         : ida_funcs.get_func_name(start_ea),
+            'name'         : func_name,
             'is_public'    : ida_name.is_public_name(start_ea),
-            'is_autonamed' : flags & ida_bytes.FF_LABL != 0,
-            'signature'    : signature_get_function_sig(start_ea)
+            'is_autonamed' : func_autonamed,
+            'signature'    : signature_get_function_sig(start_ea, func_name, func_autonamed) if SIGNSEARCH_ENABLE else ''
         }
 
         processFunctionTypeinfo(function)
