@@ -25,9 +25,98 @@ import ida_nalt
 import ida_name
 import ida_ida
 import ida_idaapi
+import ida_search
 import ida_segment
 import ida_typeinf
+import ida_ua
+import ida_xref
 
+
+#
+# signatures search
+#
+
+def signature_add_bytes(bytes_ea, bytes_count):
+    sginature_str = ''
+    for i in xrange(bytes_count):
+        sginature_str = sginature_str + '%02X ' % ida_bytes.get_byte(bytes_ea + i)
+    
+    return sginature_str
+
+def signature_add_placeholders(count):
+    return '? ' * count
+
+def signature_search_rescount(sig): 
+    search_addr = ida_ida.cvar.inf.min_ea
+    search_results = 0
+
+    while search_results < 2:
+        search_addr = ida_search.find_binary(search_addr, ida_ida.cvar.inf.max_ea, sig, 16, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
+        if search_addr == ida_idaapi.BADADDR:
+            break
+        search_results += 1
+
+    return search_results
+
+def signature_check_xrefs(instruction):
+    if ida_xref.get_first_dref_from(instruction.ea) != ida_idaapi.BADADDR:
+        return True
+    if ida_xref.get_first_fcref_from(instruction.ea) != ida_idaapi.BADADDR:
+        return True
+    return False
+
+def signature_get_value_offset(instruction):
+    for i in xrange(ida_ida.UA_MAXOP):
+        if instruction.Operands[i].offb != 0:
+            return instruction.Operands[i].offb
+
+    return 0
+
+def signature_add_instruction(instruction):
+    strSig = ''
+    
+    value_offset = signature_get_value_offset(instruction)
+    
+    #in case of no instruction value, just add al the bytes
+    if value_offset == 0:
+        return signature_add_bytes(instruction.ea, instruction.size)
+    
+    #in other case, add instruction
+    strSig += signature_add_bytes(instruction.ea, value_offset)
+
+    #and then add bytes if there is no xref, or add placeholders if xrefs found
+    if signature_check_xrefs(instruction):
+        strSig += signature_add_placeholders(instruction.size - value_offset)
+    else:
+        strSig += signature_add_bytes(instruction.ea + value_offset, instruction.size - value_offset)
+
+    return strSig
+
+def signature_get_function_sig(func_ea):
+    signature_str = ''
+    
+    current_addr = func_ea
+    while True:
+        instruction  = ida_ua.insn_t()
+        instruction_len = ida_ua.decode_insn(instruction, current_addr)
+        if not instruction_len:
+            print 'failed to decode instruction'
+            return ''
+
+        signature_str += signature_add_instruction(instruction)
+
+        rescount = signature_search_rescount(signature_str)
+        if rescount == 0:
+            print '%s: failed to find signature (%s) ' % (hex(func_ea), signature_str)
+            return ''
+
+        if rescount == 1:
+            break
+
+        current_addr = current_addr + instruction_len
+
+    print '%s : sig found (%s)' % (hex(func_ea), signature_str)
+    return signature_str.strip()
 
 
 #
@@ -173,7 +262,8 @@ def processFunctions():
             'start_ea'     : start_ea,
             'name'         : ida_funcs.get_func_name(start_ea),
             'is_public'    : ida_name.is_public_name(start_ea),
-            'is_autonamed' : flags & ida_bytes.FF_LABL != 0
+            'is_autonamed' : flags & ida_bytes.FF_LABL != 0,
+            'signature'    : signature_get_function_sig(start_ea)
         }
 
         processFunctionTypeinfo(function)
