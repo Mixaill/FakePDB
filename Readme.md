@@ -33,10 +33,12 @@ cmake --build "./pdbgen_build" --config Release --target INSTALL
 
 ## How to use
 
-1. Export information from IDA database
+1. Install IDA plugin
+    * copy content of `<repo_directory>/src_ida/` to `<IDA_directory>/plugins`
+
+2. Export information from IDA database
     * Open target executable in IDA >= 7.0
-    * `File` -> `Script file ...`
-    * select `<pdbgen_repository>/src_ida/dumpinfo.py`
+    * `Edit` -> `FakePDB` -> `Dump info to .json`
     * it will generate `filename.json` near the `.idb` file
 
 2. Generate PDB
@@ -48,4 +50,4 @@ cmake --build "./pdbgen_build" --config Release --target INSTALL
 * GHIDRA support
 * PE32+ support
 * Function arguments support
-* Create IDA plugin
+* Run `pdbgen.exe` from IDA plugin
