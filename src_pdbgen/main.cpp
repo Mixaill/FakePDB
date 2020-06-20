@@ -1,5 +1,5 @@
 /**
-   Copyright 2019 Mikhail Paulyshka
+   Copyright 2019-2020 Mikhail Paulyshka
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,45 +22,87 @@
 #include "hexhelper.h"
 #include "idadb.h"
 
-void processInput(const char* filepath) {
-    std::cout << filepath << std::endl;
-    std::filesystem::path pathExe(filepath);
-	if (!std::filesystem::exists(pathExe)) {
-		std::cerr << ".exe file does not exists";
-		return;
-	}
 
-	std::filesystem::path pathJson = pathExe;
-	pathJson += ".json";
-	if (!std::filesystem::exists(pathJson)) {
-		std::cerr << ".json file does not exists";
-		return;
+int main_usage(){
+    std::cout << "PDB generator" << std::endl << "Usage:" << std::endl 
+    << "* pdbgen symserv_exe <exe filepath> -- returns EXE folder name for symbol server" << std::endl
+    << "* pdbgen symserv_pdb <exe filepath> -- returns PDB folder name for symbol server" << std::endl
+    << "* pdbgen generate <exe filepath> <json filepath> <output file> -- generate PDB file for given file" << std::endl;
+    return 0;
+}
+
+
+int main_symserv_exe(int argc, char* argv[]){
+    std::string pathExe = argv[2];
+
+    if (!std::filesystem::exists(pathExe)) {
+		std::cerr << ".exe file does not exists";
+		return 1;
 	}
 
     PeFile pefile(pathExe);
-    IdaDb ida_db(pathJson);
+
+    std::cout << (intToHex(pefile.GetTimestamp())+intToHex(pefile.GetImageSize()));
+    return 0;
+}
+
+
+int main_symserv_pdb(int argc, char* argv[]){
+    std::string pathExe = argv[2];
+
+    if (!std::filesystem::exists(pathExe)) {
+		std::cerr << ".exe file does not exists";
+		return 1;
+	}
+
+    PeFile pefile(pathExe);
+
+    std::cout << (guidToHex(pefile.GetPdbGuid()) + intToHex(pefile.GetPdbAge()));
+    return 0;
+}
+
+
+int main_generate(int argc, char* argv[]) {
+    std::filesystem::path path_exe  = argv[2];
+    std::filesystem::path path_json = argv[3];
+    std::filesystem::path path_out  = argv[4];
+
+    if (!std::filesystem::exists(path_exe)) {
+		std::cerr << ".exe file does not exists";
+		return 2;
+	}
+
+    if (!std::filesystem::exists(path_json)) {
+		std::cerr << ".json file does not exists";
+		return 3;
+	}
+
+    PeFile pefile(path_exe);
+    IdaDb ida_db(path_json);
     PdbCreator creator(pefile);
 
     creator.Initialize();
-
     creator.ImportIDA(ida_db);
+    
+    std::filesystem::create_directories(path_out.parent_path());
+    creator.Commit(path_out);
 
-	auto pathPdb = pathExe.parent_path() / "output"  / pefile.GetPdbFilename() / (guidToHex(pefile.GetPdbGuid()) + intToHex(pefile.GetPdbAge())) / pefile.GetPdbFilename();
-    creator.Commit(pathPdb);
-
-	auto pathExeOut = pathExe.parent_path() / "output" / pathExe.filename() / (intToHex(pefile.GetTimestamp())+intToHex(pefile.GetImageSize())) / pathExe.filename();
-	std::filesystem::create_directories(pathExeOut.parent_path());
-	std::filesystem::copy_file(pathExe, pathExeOut, std::filesystem::copy_options::overwrite_existing);
+    return 0;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc == 0) {
-        return 0;
-    }
 
-    for (int i = 1; i < argc; i++) {
-        processInput(argv[i]);
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        if(argc > 2 && !stricmp(argv[1], "symserv_exe")){
+            return main_symserv_exe(argc, argv);
+        }
+        else if(argc > 2 && !stricmp(argv[1], "symserv_pdb")){
+            return main_symserv_pdb(argc, argv);
+        }
+        else if(argc > 4 && !stricmp(argv[1], "generate")){
+            return main_generate(argc, argv);
+        }
     }
     
-    return 0;
+    return main_usage();
 }
