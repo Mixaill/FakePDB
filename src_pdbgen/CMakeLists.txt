@@ -50,3 +50,7 @@ add_executable(pdbgen_test_pefile_1)
 target_sources(pdbgen_test_pefile_1 PRIVATE "test/test_pefile_1.cpp")
 target_link_libraries(pdbgen_test_pefile_1 PRIVATE pdbgen_common)
 
+install(
+    TARGETS pdbgen
+    RUNTIME DESTINATION bin
+)
