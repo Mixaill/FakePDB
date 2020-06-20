@@ -2,7 +2,7 @@ Push-Location $PSScriptRoot
 $root = (Get-Location).Path -replace "\\","/"
 
 #clone LLVM
-git clone https://github.com/llvm/llvm-project "./~build/llvm_git"
+git clone https://github.com/llvm/llvm-project "./~build/llvm_git" -q
 
 #build LLVM
 cmake "./~build/llvm_git/llvm" -B"./~build/llvm_build" -DCMAKE_BUILD_TYPE="Release" -DCMAKE_INSTALL_PREFIX="./~build/llvm_install" -DLLVM_ENABLE_PDB=ON -DLLVM_BUILD_TOOLS=OFF -DLLVM_BUILD_UTILS=OFF -DLLVM_TARGETS_TO_BUILD=""
