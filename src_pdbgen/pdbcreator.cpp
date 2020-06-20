@@ -27,10 +27,9 @@
 #include <llvm/DebugInfo/CodeView/SymbolSerializer.h>
 
 #include <llvm/DebugInfo/PDB/Native/DbiModuleDescriptorBuilder.h>
-#include <llvm/DebugInfo/PDB/Native/GSIStreamBuilder.h>
 
 template <typename R, class FuncTy> void parallelSort(R&& Range, FuncTy Fn) {
-    sort(llvm::parallel::par, std::begin(Range), std::end(Range), Fn);
+    llvm::parallelSort(std::begin(Range), std::end(Range), Fn);
 }
 
 PdbCreator::PdbCreator(PeFile& pefile) : _pefile(pefile),  _pdbBuilder(_allocator)
@@ -121,42 +120,32 @@ void PdbCreator::processGSI(IdaDb& ida_db)
 {
     auto& GsiBuilder = _pdbBuilder.getGsiBuilder();
 
-    std::vector<llvm::codeview::PublicSym32> Publics;
+    std::vector<llvm::pdb::BulkPublic> Publics;
 
     //Functions
     for (auto& ida_func : ida_db.Functions()) {
-        if (!ida_func.is_public) {
-        //    continue;
-        }
-
         Publics.push_back(createPublicSymbol(ida_func));
-     
     }
 
     //Names
     for (auto& ida_name : ida_db.Names()) {
-        if (!ida_name.is_public) {
-        //    continue;
-        }
-        
+
+        //skip functions because they were already processed
         if (ida_name.is_func) {
             continue;
         }
 
         Publics.push_back(createPublicSymbol(ida_name));
-
     }
     
     if (!Publics.empty()) {
 
         // Sort the public symbols and add them to the stream.
-        parallelSort(Publics, [](const llvm::codeview::PublicSym32 & L, const llvm::codeview::PublicSym32 & R) {
-            return L.Name < R.Name;
+        parallelSort(Publics, [](const llvm::pdb::BulkPublic& L, const llvm::pdb::BulkPublic& R) {
+            return strcmp(L.Name, R.Name);
         });
 
-        for (const llvm::codeview::PublicSym32& Pub : Publics) {
-            GsiBuilder.addPublicSymbol(Pub);
-        }
+        GsiBuilder.addPublicSymbols(std::move(Publics));
     }
 }
 
@@ -166,8 +155,7 @@ bool PdbCreator::processSections()
 
     // Add Section Map stream.
     auto sections = _pefile.GetSectionHeaders();
-    _sectionMap = llvm::pdb::DbiStreamBuilder::createSectionMap(sections);
-    DbiBuilder.setSectionMap(_sectionMap);
+    DbiBuilder.createSectionMap(sections);
 
     // Add COFF section header stream.
     auto sectionsTable = llvm::ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(sections.begin()), reinterpret_cast<const uint8_t*>(sections.end()));
@@ -194,23 +182,25 @@ void PdbCreator::processSymbols()
 	*/
 }
 
-llvm::codeview::PublicSym32 PdbCreator::createPublicSymbol(IdaFunction& idaFunc)
+llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaFunction& idaFunc)
 {
-    llvm::codeview::PublicSym32 public_sym;
-    public_sym.Name = idaFunc.name;
-    public_sym.Flags = llvm::codeview::PublicSymFlags::Function;
-    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_ea);
+    llvm::pdb::BulkPublic public_sym;
+    public_sym.Name = idaFunc.name.c_str();
+    public_sym.NameLen = idaFunc.name.size();
+    public_sym.Flags = static_cast<uint16_t>(llvm::codeview::PublicSymFlags::Function);
+    public_sym.U.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_ea);
     public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_ea);
    
     return public_sym;
 }
 
-llvm::codeview::PublicSym32 PdbCreator::createPublicSymbol(IdaName& idaName)
+llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaName& idaName)
 {
-    llvm::codeview::PublicSym32 public_sym;
-    public_sym.Name = idaName.name;
-    public_sym.Flags = llvm::codeview::PublicSymFlags::None;
-    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaName.ea);
+    llvm::pdb::BulkPublic public_sym;
+    public_sym.Name = idaName.name.c_str();
+    public_sym.NameLen = idaName.name.size();
+    public_sym.Flags = static_cast<uint16_t>(llvm::codeview::PublicSymFlags::None);
+    public_sym.U.Segment = _pefile.GetSectionIndexForRVA(idaName.ea);
     public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaName.ea);
 
     return public_sym;

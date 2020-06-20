@@ -22,6 +22,7 @@
 
 #include <llvm/DebugInfo/PDB/Native/PDBFileBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/GSIStreamBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/RawConstants.h>
@@ -51,8 +52,8 @@ private:
 
     void processSymbols();
 
-    llvm::codeview::PublicSym32 createPublicSymbol(IdaFunction& idaFunc);
-    llvm::codeview::PublicSym32 createPublicSymbol(IdaName& idaName);
+    llvm::pdb::BulkPublic createPublicSymbol(IdaFunction& idaFunc);
+    llvm::pdb::BulkPublic createPublicSymbol(IdaName& idaName);
 
     PeFile& _pefile;
 
