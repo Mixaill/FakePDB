@@ -14,9 +14,12 @@
    limitations under the License.
 """
 
+FAKEPDB_VERSION = '0.1'
+
 import ida_idaapi
 
 import fakepdb.dumpinfo
+import fakepdb.generation
 import fakepdb.offsets
 import fakepdb.signatures
 
@@ -25,7 +28,7 @@ class FakePdbPlugin(ida_idaapi.plugin_t):
     flags = ida_idaapi.PLUGIN_FIX | ida_idaapi.PLUGIN_HIDE
 
     comment = "FakePDB plugin"
-    wanted_name ='FakePDB'    
+    wanted_name = 'FakePDB'
     wanted_hotkey = ''
     help = 'https://github.com/mixaill/FakePDB'
 
@@ -33,13 +36,14 @@ class FakePdbPlugin(ida_idaapi.plugin_t):
         fakepdb.dumpinfo.register_actions()
         fakepdb.signatures.register_actions()
         fakepdb.offsets.register_actions()
+        fakepdb.generation.register_actions()
         return ida_idaapi.PLUGIN_OK
 
     def run(self, arg):
         pass
 
     def term(self):
-       pass
+        pass
 
 def PLUGIN_ENTRY():
     return FakePdbPlugin()

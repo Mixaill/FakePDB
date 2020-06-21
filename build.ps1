@@ -16,7 +16,7 @@ cmake --build "./~build/pdbgen_build" --config Release --target INSTALL
 New-Item -Path "./~build/deploy" -ItemType Directory -ErrorAction SilentlyContinue
 New-Item -Path "./~build/deploy/fakepdb/bin/" -ItemType Directory -ErrorAction SilentlyContinue
 Copy-Item -Path "./src_ida/*" -Destination "./~build/deploy/" -Recurse
-Copy-Item -Path "./~build/pdbgen_install/bin/*.exe" -Destination "./~build/deploy/fakepdb/bin/" -Recurse
+Copy-Item -Path "./~build/pdbgen_install/bin/*.exe" -Destination "./~build/deploy/fakepdb/win32/" -Recurse
 
 #pack files
 Compress-Archive -Path "./~build/deploy/*" -DestinationPath "./~build/deploy/fakepdb.zip"
