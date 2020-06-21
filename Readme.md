@@ -4,10 +4,12 @@ Tool for PDB generation from IDA Pro database
 
 Supports IDA >= 7.0
 
-## How to compile
+## How to get
 
-* run `<repository_root>/build.ps1`
-* grab `fakepdb.zip` from `<repository_root>/~build/deploy`
+* Download latest release from release page: https://github.com/Mixaill/FakePDB/releases
+* Or compile it from sources:
+   * run `<repository_root>/build.ps1`
+   * grab `fakepdb.zip` from `<repository_root>/~build/deploy`
 
 ## How to install
 
@@ -55,7 +57,9 @@ where:
 ## TODO
 
 * GHIDRA support
+* Linux support
 * Function arguments support
+
 
 ## Thanks
 
