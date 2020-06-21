@@ -25,6 +25,7 @@ required file format:
    "function_name_1": "0001:123456",
    "function_name_2": "0001:254646",
    "function_name_X": "XXXX:YYYYYY",
+   "function_name_Y": "0x0124567AF",
 }
 ```
 
@@ -32,6 +33,7 @@ required file format:
 where:
  * XXXX: number of the PE section
  * YYYY: offset from the begining of the section in DEC
+ * 0x0124567AF: IDA effective address
 '''
 
 import json
@@ -83,11 +85,16 @@ class OffsetsImporter:
     def __import_name(self, segments, name, addr):
         addr_components = addr.split(':')
 
-        try:
-            segment_ea = segments[int(addr_components[0])]
-        except KeyError:
-            print ('import_name: %s -> segment %s not found' % (name, addr_components[0]))
-            return
+        name_addr = 0
+        if len(addr_components) > 1:
+            try:
+                segment_ea = segments[int(addr_components[0])]
+                name_addr = segment_ea + int(addr_components[1])
+            except KeyError:
+                print ('import_name: %s -> segment %s not found' % (name, addr_components[0]))
+                return
+        else:
+            name_addr = int(addr_components[0], 16)
 
         #replace <> in name because IDA does not support it
         name = name.replace('<','(').replace('>',')').encode('ascii')
@@ -96,7 +103,7 @@ class OffsetsImporter:
         while ida_name.get_name_ea(ida_idaapi.BADADDR, name) != ida_idaapi.BADADDR:
             name = name + "_"
 
-        ida_name.set_name(segment_ea + int(addr_components[1]), name)
+        ida_name.set_name(name_addr, name)
 
 
 #
