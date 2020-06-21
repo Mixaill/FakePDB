@@ -11,9 +11,9 @@ Based on:
 
 ## How to compile
 
-* run `./build.ps1`
+* run `<repository_root>/build.ps1`
 
-* grab `fakepdb.zip` from `<repo>/~build/deploy`
+* grab `fakepdb.zip` from `<repository_root>/~build/deploy`
 
 ## How to install
 
@@ -22,9 +22,9 @@ Based on:
 ## How to use
 
 ### 1. Export information from IDA database
-    * Open target executable in IDA >= 7.0
-    * `Edit` -> `FakePDB` -> `Dump info to .json` (or `Ctrl`+`Shift`+`1`)
-    * it will generate `filename.json` near the `.idb` file
+  * Open target executable in IDA >= 7.0
+  * `Edit` -> `FakePDB` -> `Dump info to .json` (or `Ctrl`+`Shift`+`1`)
+  * it will generate `filename.json` near the `.idb` file
 
 ### 2. Find binary signature of function
   * Open target executable in IDA >= 7.0
