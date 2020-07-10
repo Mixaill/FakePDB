@@ -187,8 +187,8 @@ llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaFunction& idaFunc)
     llvm::pdb::BulkPublic public_sym;
     public_sym.Name = idaFunc.name.c_str();
     public_sym.NameLen = idaFunc.name.size();
-    public_sym.Flags = static_cast<uint16_t>(llvm::codeview::PublicSymFlags::Function);
-    public_sym.U.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_ea);
+    public_sym.setFlags(llvm::codeview::PublicSymFlags::Function);
+    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_ea);
     public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_ea);
    
     return public_sym;
@@ -199,8 +199,8 @@ llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaName& idaName)
     llvm::pdb::BulkPublic public_sym;
     public_sym.Name = idaName.name.c_str();
     public_sym.NameLen = idaName.name.size();
-    public_sym.Flags = static_cast<uint16_t>(llvm::codeview::PublicSymFlags::None);
-    public_sym.U.Segment = _pefile.GetSectionIndexForRVA(idaName.ea);
+    public_sym.setFlags(llvm::codeview::PublicSymFlags::None);
+    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaName.ea);
     public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaName.ea);
 
     return public_sym;
