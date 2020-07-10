@@ -25,6 +25,7 @@ import ida_kernwin
 import ida_loader
 import ida_nalt
 import ida_name
+import ida_pro
 import ida_segment
 import ida_typeinf
 
@@ -136,8 +137,10 @@ class InformationDumper():
 
         tinfo = ida_typeinf.tinfo_t()
         func_type_data = ida_typeinf.func_type_data_t()
-        tinfo.get_named_type
-        ida_typeinf.guess_tinfo(function['start_ea'],tinfo)
+        if ida_pro.IDA_SDK_VERSION >= 740:
+            ida_typeinf.guess_tinfo(tinfo,function['start_ea'])
+        else:
+            ida_typeinf.guess_tinfo(function['start_ea'],tinfo)
         tinfo.get_func_details(func_type_data)
 
         #calling convention
