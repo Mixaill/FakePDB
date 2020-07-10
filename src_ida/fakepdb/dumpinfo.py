@@ -14,8 +14,11 @@
    limitations under the License.
 """
 
+from __future__ import print_function
+
 import json
 import os.path
+import sys
 
 if sys.version_info.major == 3:
     from past.builtins import xrange
@@ -41,6 +44,8 @@ class InformationDumper():
     #
 
     def dump_info(self, filepath):
+        self._base = ida_nalt.get_imagebase()
+
         output = {
             'general'   : self.__process_general(), 
             'segments'  : self.__process_segments(),
@@ -121,37 +126,37 @@ class InformationDumper():
 
     def __process_segments(self):
         segments = list()
-        
+
         for n in xrange(ida_segment.get_segm_qty()):
             seg = ida_segment.getnseg(n)
             if seg:
                 segm = {
-                    'name'     : ida_segment.get_segm_name(seg),
-                    'start_ea' : seg.start_ea,
-                    'class'    : ida_segment.get_segm_class(seg),
-                    'selector' : seg.sel
+                    'name'      : ida_segment.get_segm_name(seg),
+                    'start_rva' : seg.start_ea - self._base,
+                    'class'     : ida_segment.get_segm_class(seg),
+                    'selector'  : seg.sel
                 }
                 
                 segments.append(segm)
 
         return segments
 
-    def __process_function_typeinfo(self, function):
+    def __process_function_typeinfo(self, info, func):
 
         tinfo = ida_typeinf.tinfo_t()
         func_type_data = ida_typeinf.func_type_data_t()
         if ida_pro.IDA_SDK_VERSION >= 740:
-            ida_typeinf.guess_tinfo(tinfo,function['start_ea'])
+            ida_typeinf.guess_tinfo(tinfo,func.start_ea)
         else:
-            ida_typeinf.guess_tinfo(function['start_ea'],tinfo)
+            ida_typeinf.guess_tinfo(func.start_ea,tinfo)
         tinfo.get_func_details(func_type_data)
 
         #calling convention
-        function['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
+        info['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
         func_type_data.rettype
         
         #return tpye
-        function['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
+        info['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
 
         #arguments
         arguments = list()
@@ -165,7 +170,7 @@ class InformationDumper():
             
             arguments.append(arginfo)
 
-        function['arguments'] = arguments
+        info['arguments'] = arguments
 
     def __process_functions(self):
         functions = list()
@@ -192,13 +197,17 @@ class InformationDumper():
             func_public = ida_name.is_public_name(start_ea)
 
             function = {
-                'start_ea'     : start_ea,
+                'start_rva'    : start_ea - self._base,
                 'name'         : func_name,
                 'is_public'    : func_public,
                 'is_autonamed' : func_autonamed
             }
 
-            self.__process_function_typeinfo(function)
+            # PE32/PE32+ only support binaries up to 2GB
+            if function['start_rva'] >= 2**32:
+                print('RVA out of range for function: ' + function['name'], file=sys.stderr)
+
+            self.__process_function_typeinfo(function, func)
             functions.append(function)
 
             func = ida_funcs.get_next_func(start_ea)
@@ -215,11 +224,15 @@ class InformationDumper():
                 continue
 
             name = {
-                'ea'        : ea,
+                'rva'       : ea - self._base,
                 'name'      : ida_name.get_nlist_name(i),
                 'is_public' : ida_name.is_public_name(ea),
                 'is_func'   : ida_funcs.get_func(ea) is not None
             }
+
+            # PE32/PE32+ only support binaries up to 2GB
+            if name['rva'] >= 2**32:
+                print('RVA out of range for name: ' + name['name'], file=sys.stderr)
 
             names.append(name)
 

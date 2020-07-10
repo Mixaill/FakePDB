@@ -104,7 +104,8 @@ void PdbCreator::ImportIDA(IdaDb& ida_db)
 bool PdbCreator::Commit(std::filesystem::path& path)
 {
 	std::filesystem::create_directories(path.parent_path());
-    if (_pdbBuilder.commit(path.string(), &_pdbBuilder.getInfoBuilder().getGuid())) {
+    auto guid = _pdbBuilder.getInfoBuilder().getGuid();
+    if (_pdbBuilder.commit(path.string(), &guid)) {
         return false;
     }
 
@@ -188,8 +189,8 @@ llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaFunction& idaFunc)
     public_sym.Name = idaFunc.name.c_str();
     public_sym.NameLen = idaFunc.name.size();
     public_sym.setFlags(llvm::codeview::PublicSymFlags::Function);
-    public_sym.Segment = _pefile.GetSectionIndexForEA(idaFunc.start_ea);
-    public_sym.Offset = _pefile.GetSectionOffsetForEA(idaFunc.start_ea);
+    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_rva);
+    public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_rva);
 
     return public_sym;
 }
@@ -200,8 +201,8 @@ llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaName& idaName)
     public_sym.Name = idaName.name.c_str();
     public_sym.NameLen = idaName.name.size();
     public_sym.setFlags(llvm::codeview::PublicSymFlags::None);
-    public_sym.Segment = _pefile.GetSectionIndexForEA(idaName.ea);
-    public_sym.Offset = _pefile.GetSectionOffsetForEA(idaName.ea);
+    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaName.rva);
+    public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaName.rva);
 
     return public_sym;
 }

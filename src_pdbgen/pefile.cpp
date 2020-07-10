@@ -18,8 +18,6 @@
 
 
 #include <llvm/Support/Error.h>
-#include <limits>
-#include <cassert>
 
 PeFile::PeFile(const std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
 {
@@ -80,14 +78,10 @@ llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders()
     return llvm::ArrayRef<llvm::object::coff_section>(section,number_of_sections);
 }
 
-uint16_t PeFile::GetSectionIndexForEA(uint64_t EA)
+uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA)
 {
-    assert(EA - _obj->getImageBase() < std::numeric_limits<uint32_t>::max());
-    auto RVA = static_cast<uint32_t>(EA - _obj->getImageBase());
-
     uint16_t index = 1;
     for (auto& section : GetSectionHeaders()) {
-        uint32_t s_va = section.VirtualAddress;
         if (section.VirtualAddress <= RVA && section.VirtualAddress + section.VirtualSize >= RVA) {
             return index;
         }
@@ -98,11 +92,8 @@ uint16_t PeFile::GetSectionIndexForEA(uint64_t EA)
     return 0;
 }
 
-uint32_t PeFile::GetSectionOffsetForEA(uint64_t EA)
+uint32_t PeFile::GetSectionOffsetForRVA(uint32_t RVA)
 {
-    assert(EA - _obj->getImageBase() < std::numeric_limits<uint32_t>::max());
-    auto RVA = static_cast<uint32_t>(EA - _obj->getImageBase());
-
     for (auto& section : GetSectionHeaders()) {
         if (section.VirtualAddress <= RVA && section.VirtualAddress + section.VirtualSize >= RVA) {
             return RVA - section.VirtualAddress;
@@ -129,7 +120,6 @@ uint32_t PeFile::GetImageSize()
         return pe32plus->SizeOfImage;
     }
 
-    assert(false);
     return 0;
 }
 
