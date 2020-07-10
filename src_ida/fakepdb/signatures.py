@@ -14,6 +14,11 @@
    limitations under the License.
 """
 
+import sys
+
+if sys.version_info.major == 3:
+    from past.builtins import xrange
+
 import ida_bytes
 import ida_ida
 import ida_idaapi

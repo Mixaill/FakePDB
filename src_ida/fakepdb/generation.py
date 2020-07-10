@@ -28,7 +28,7 @@ import ida_auto
 import ida_kernwin
 import ida_loader
 
-from dumpinfo import InformationDumper
+from .dumpinfo import InformationDumper
 
 class PdbGenerator:
 

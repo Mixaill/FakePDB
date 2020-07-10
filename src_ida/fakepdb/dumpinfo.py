@@ -17,6 +17,9 @@
 import json
 import os.path
 
+if sys.version_info.major == 3:
+    from past.builtins import xrange
+
 import ida_auto
 import ida_bytes
 import ida_funcs
