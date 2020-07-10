@@ -172,6 +172,27 @@ class InformationDumper():
 
         info['arguments'] = arguments
 
+    def __process_function_labels(self, func):
+        labels = list()
+
+        it = ida_funcs.func_item_iterator_t()
+        if not it.set(func):
+            return labels
+
+        while it.next_code():
+            ea = it.current()
+            name = ida_name.get_visible_name(ea, ida_name.GN_LOCAL)
+
+            if name != '':
+                labels.append({
+                    'offset'       : ea - func.start_ea,
+                    'name'         : name,
+                    'is_public'    : ida_name.is_public_name(ea),
+                    'is_autonamed' : ida_bytes.get_full_flags(ea) & ida_bytes.FF_LABL != 0
+                })
+
+        return labels
+
     def __process_functions(self):
         functions = list()
 
@@ -208,6 +229,9 @@ class InformationDumper():
                 print('RVA out of range for function: ' + function['name'], file=sys.stderr)
 
             self.__process_function_typeinfo(function, func)
+
+            function['labels'] = self.__process_function_labels(func)
+
             functions.append(function)
 
             func = ida_funcs.get_next_func(start_ea)

@@ -20,11 +20,19 @@
 #include <filesystem>
 #include <vector>
 
+struct IdaLabel {
+    uint32_t offset;
+    std::string name;
+    bool is_public;
+    bool is_autonamed;
+};
+
 struct IdaFunction {
     std::string name;
     uint32_t start_rva;
     bool is_public;
     bool is_autonamed;
+    std::vector<IdaLabel> labels;
 };
 
 struct IdaName {

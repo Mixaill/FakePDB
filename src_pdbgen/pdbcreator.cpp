@@ -126,6 +126,14 @@ void PdbCreator::processGSI(IdaDb& ida_db)
     //Functions
     for (auto& ida_func : ida_db.Functions()) {
         Publics.push_back(createPublicSymbol(ida_func));
+
+        for (const auto& ida_label : ida_func.labels) {
+            if (ida_label.is_autonamed) {
+                continue;
+            }
+
+            Publics.push_back(createPublicSymbol(ida_label, ida_func));
+        }
     }
 
     //Names
@@ -191,6 +199,18 @@ llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(IdaFunction& idaFunc)
     public_sym.setFlags(llvm::codeview::PublicSymFlags::Function);
     public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_rva);
     public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_rva);
+
+    return public_sym;
+}
+
+llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(const IdaLabel& idaLabel, const IdaFunction& idaFunc)
+{
+    llvm::pdb::BulkPublic public_sym;
+    public_sym.Name = idaLabel.name.c_str();
+    public_sym.NameLen = idaLabel.name.size();
+    public_sym.setFlags(llvm::codeview::PublicSymFlags::Code);
+    public_sym.Segment = _pefile.GetSectionIndexForRVA(idaLabel.offset + idaFunc.start_rva);
+    public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaLabel.offset + idaFunc.start_rva);
 
     return public_sym;
 }
