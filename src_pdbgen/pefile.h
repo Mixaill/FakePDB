@@ -39,9 +39,9 @@ public:
 
     llvm::ArrayRef<llvm::object::coff_section> GetSectionHeaders();
 
-    uint16_t GetSectionIndexForRVA(uint32_t RVA);
+    uint16_t GetSectionIndexForEA(uint64_t EA);
 
-    uint32_t GetSectionOffsetForRVA(uint32_t RVA);
+    uint32_t GetSectionOffsetForEA(uint64_t EA);
 
 	uint32_t GetTimestamp();
 

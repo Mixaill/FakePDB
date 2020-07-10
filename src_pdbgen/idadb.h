@@ -22,13 +22,13 @@
 
 struct IdaFunction {
     std::string name;
-    uint32_t start_ea;
+    uint64_t start_ea;
     bool is_public;
     bool is_autonamed;
 };
 
 struct IdaName {
-    uint32_t ea;
+    uint64_t ea;
     std::string name;
     bool is_public;
     bool is_func;

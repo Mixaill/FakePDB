@@ -52,7 +52,7 @@ void IdaDb::load(std::filesystem::path& filepath)
         idaf.name = function["name"].get<std::string>();
         idaf.is_autonamed = function["is_autonamed"].get<bool>();
         idaf.is_public = function["is_public"].get<bool>();
-        idaf.start_ea = function["start_ea"].get<uint32_t>();
+        idaf.start_ea = function["start_ea"].get<uint64_t>();
 
         _functions.push_back(idaf);
     }
@@ -65,7 +65,7 @@ void IdaDb::load(std::filesystem::path& filepath)
         idan.name = name["name"].get<std::string>();
         idan.is_func = name["is_func"].get<bool>();
         idan.is_public = name["is_public"].get<bool>();
-        idan.ea = name["ea"].get<uint32_t>();
+        idan.ea = name["ea"].get<uint64_t>();
         
         _names.push_back(idan);
     }
