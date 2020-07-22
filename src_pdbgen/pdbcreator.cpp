@@ -32,7 +32,7 @@ template <typename R, class FuncTy> void parallelSort(R&& Range, FuncTy Fn) {
     llvm::parallelSort(std::begin(Range), std::end(Range), Fn);
 }
 
-PdbCreator::PdbCreator(PeFile& pefile) : _pefile(pefile),  _pdbBuilder(_allocator)
+PdbCreator::PdbCreator(PeFile& pefile, bool withLabels) : _pefile(pefile), _withLabels(withLabels), _pdbBuilder(_allocator)
 {
 }
 
@@ -127,12 +127,14 @@ void PdbCreator::processGSI(IdaDb& ida_db)
     for (auto& ida_func : ida_db.Functions()) {
         Publics.push_back(createPublicSymbol(ida_func));
 
-        for (const auto& ida_label : ida_func.labels) {
-            if (ida_label.is_autonamed) {
-                continue;
-            }
+        if (_withLabels) {
+            for (const auto& ida_label : ida_func.labels) {
+                if (ida_label.is_autonamed) {
+                    continue;
+                }
 
-            Publics.push_back(createPublicSymbol(ida_label, ida_func));
+                Publics.push_back(createPublicSymbol(ida_label, ida_func));
+            }
         }
     }
 

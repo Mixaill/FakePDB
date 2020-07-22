@@ -33,7 +33,7 @@
 class PdbCreator {
 public:
 
-    PdbCreator(PeFile& peFile);
+    PdbCreator(PeFile& peFile, bool withLabels);
 
     bool Initialize();
 
@@ -57,6 +57,8 @@ private:
     llvm::pdb::BulkPublic createPublicSymbol(IdaName& idaName);
 
     PeFile& _pefile;
+
+    bool _withLabels;
 
     llvm::BumpPtrAllocator _allocator;
     llvm::pdb::PDBFileBuilder _pdbBuilder;

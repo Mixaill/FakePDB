@@ -37,8 +37,12 @@ class PdbGenerator:
         self.__executable_name = 'pdbgen.exe' if self.__executable_platform == 'win32' else 'pdbgen'
         self.__executable_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), self.__executable_platform, self.__executable_name)
 
-    def generate(self, path_exe, path_json, path_pdb):
-        subprocess.call([self.__executable_path, 'generate', path_exe, path_json, path_pdb])
+    def generate(self, path_exe, path_json, path_pdb, with_labels):
+        cmd = [self.__executable_path, 'generate']
+        if with_labels:
+            cmd += ['-l']
+        cmd += [path_exe, path_json, path_pdb]
+        subprocess.call(cmd)
 
     def get_symserv_exe(self, path_exe):
         p = subprocess.Popen([self.__executable_path, 'symserv_exe', path_exe], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -56,13 +60,17 @@ class PdbGenerator:
 #
 
 class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
-    def __init__(self):
+    def __init__(self, with_labels):
         ida_kernwin.action_handler_t.__init__(self)
+        self.with_labels = with_labels
 
     # Say hello when invoked.
     def activate(self, ctx):
         ida_auto.set_ida_state(ida_auto.st_Work)
-        print('FakePDB/generate pdb:')
+        if self.with_labels:
+            print('FakePDB/generate pdb (with function labels):')
+        else:
+            print('FakePDB/generate pdb:')
 
         dumper = InformationDumper()
         generator = PdbGenerator()
@@ -80,7 +88,7 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
         dumper.dump_info(filepath_json)
 
         print('    * generating PDB: %s' % filepath_pdb)
-        generator.generate(filepath_exe, filepath_json, filepath_pdb)
+        generator.generate(filepath_exe, filepath_json, filepath_pdb, self.with_labels)
 
         print('    * symserv EXE id: %s' % generator.get_symserv_exe(filepath_exe))
         print('    * symserv PDB id: %s' % generator.get_symserv_pdb(filepath_exe))
@@ -96,11 +104,22 @@ def register_actions():
     action_desc = ida_kernwin.action_desc_t(
         'fakepdb_pdb_generation',                # The action name. This acts like an ID and must be unique
         'Generate .PDB file',                    # The action text.
-        __fakepdb_pdbgeneration_actionhandler(), # The action handler.
+        __fakepdb_pdbgeneration_actionhandler(False), # The action handler.
         'Ctrl+Shift+4',                          # Optional: the action shortcut
         '',                                      # Optional: the action tooltip (available in menus/toolbar)
         0)                                       # Optional: the action icon (shows when in menus/toolbars)
 
     ida_kernwin.register_action(action_desc)
     ida_kernwin.attach_action_to_menu('Edit/FakePDB/', 'fakepdb_pdb_generation', ida_kernwin.SETMENU_APP)
+
+    action_desc = ida_kernwin.action_desc_t(
+        'fakepdb_pdb_generation_labels',         # The action name. This acts like an ID and must be unique
+        'Generate .PDB file (with function labels)',      # The action text.
+        __fakepdb_pdbgeneration_actionhandler(True), # The action handler.
+        'Ctrl+Shift+5',                          # Optional: the action shortcut
+        '',                                      # Optional: the action tooltip (available in menus/toolbar)
+        0)                                       # Optional: the action icon (shows when in menus/toolbars)
+
+    ida_kernwin.register_action(action_desc)
+    ida_kernwin.attach_action_to_menu('Edit/FakePDB/', 'fakepdb_pdb_generation_labels', ida_kernwin.SETMENU_APP)
 

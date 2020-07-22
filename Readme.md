@@ -24,6 +24,8 @@ There are several features in this plugin:
   * `Edit` -> `FakePDB` -> `Generate .PDB file` (or `Ctrl`+`Shift`+`4`)
   * get PDB file from the IDA database directory
 
+  The PDB can optionally include symbols for function labels: use `Generate .PDB file (with function labels)` (or `Ctrl`+`Shift`+`5`).
+
 ### 2. IDA database export to .json
   * Open target executable in IDA >= 7.0
   * `Edit` -> `FakePDB` -> `Dump info to .json` (or `Ctrl`+`Shift`+`1`)
