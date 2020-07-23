@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-FAKEPDB_VERSION = '0.1'
+FAKEPDB_VERSION = '0.2'
 
 import ida_idaapi
 
