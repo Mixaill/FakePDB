@@ -80,11 +80,8 @@ llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders()
 
 uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA)
 {
-    RVA -= _obj->getImageBase();
-
     uint16_t index = 1;
     for (auto& section : GetSectionHeaders()) {
-        uint32_t s_va = section.VirtualAddress;
         if (section.VirtualAddress <= RVA && section.VirtualAddress + section.VirtualSize >= RVA) {
             return index;
         }
@@ -97,8 +94,6 @@ uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA)
 
 uint32_t PeFile::GetSectionOffsetForRVA(uint32_t RVA)
 {
-    RVA -= _obj->getImageBase();
-
     for (auto& section : GetSectionHeaders()) {
         if (section.VirtualAddress <= RVA && section.VirtualAddress + section.VirtualSize >= RVA) {
             return RVA - section.VirtualAddress;
@@ -124,6 +119,8 @@ uint32_t PeFile::GetImageSize()
     if (pe32plus) {
         return pe32plus->SizeOfImage;
     }
+
+    return 0;
 }
 
 llvm::COFF::MachineTypes PeFile::GetMachine()

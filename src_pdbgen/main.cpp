@@ -27,7 +27,7 @@ int main_usage(){
     std::cout << "PDB generator" << std::endl << "Usage:" << std::endl 
     << "* pdbgen symserv_exe <exe filepath> -- returns EXE folder name for symbol server" << std::endl
     << "* pdbgen symserv_pdb <exe filepath> -- returns PDB folder name for symbol server" << std::endl
-    << "* pdbgen generate <exe filepath> <json filepath> <output file> -- generate PDB file for given file" << std::endl;
+    << "* pdbgen generate [-l] <exe filepath> <json filepath> <output file> -- generate PDB file for given file" << std::endl;
     return 0;
 }
 
@@ -63,9 +63,15 @@ int main_symserv_pdb(int argc, char* argv[]){
 
 
 int main_generate(int argc, char* argv[]) {
-    std::filesystem::path path_exe  = argv[2];
-    std::filesystem::path path_json = argv[3];
-    std::filesystem::path path_out  = argv[4];
+    bool with_labels = false;
+    size_t arg_exe = 2;
+    if (argc > 5 && std::string(argv[2]) == "-l") {
+        arg_exe++;
+        with_labels = true;
+    }
+    std::filesystem::path path_exe  = argv[arg_exe];
+    std::filesystem::path path_json = argv[arg_exe+1];
+    std::filesystem::path path_out  = argv[arg_exe+2];
 
     if (!std::filesystem::exists(path_exe)) {
 		std::cerr << ".exe file does not exists";
@@ -79,7 +85,7 @@ int main_generate(int argc, char* argv[]) {
 
     PeFile pefile(path_exe);
     IdaDb ida_db(path_json);
-    PdbCreator creator(pefile);
+    PdbCreator creator(pefile, with_labels);
 
     creator.Initialize();
     creator.ImportIDA(ida_db);

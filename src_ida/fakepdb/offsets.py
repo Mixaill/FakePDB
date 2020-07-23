@@ -39,6 +39,10 @@ where:
 import json
 import os
 import traceback
+import sys
+
+if sys.version_info.major == 3:
+    from past.builtins import xrange
 
 import ida_idaapi
 import ida_kernwin

@@ -43,9 +43,9 @@ public:
 
     uint32_t GetSectionOffsetForRVA(uint32_t RVA);
 
-	uint32_t GetTimestamp();
+    uint32_t GetTimestamp();
 
-	uint32_t GetImageSize();
+    uint32_t GetImageSize();
 
     llvm::COFF::MachineTypes GetMachine();
 

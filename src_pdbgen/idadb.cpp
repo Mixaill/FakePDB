@@ -20,6 +20,28 @@
 
 #include <fstream>
 
+void from_json(const nlohmann::json& j, IdaLabel& l) {
+    j.at("offset").get_to(l.offset);
+    j.at("name").get_to(l.name);
+    j.at("is_public").get_to(l.is_public);
+    j.at("is_autonamed").get_to(l.is_autonamed);
+}
+
+void from_json(const nlohmann::json& j, IdaFunction& f) {
+    j.at("start_rva").get_to(f.start_rva);
+    j.at("name").get_to(f.name);
+    j.at("is_public").get_to(f.is_public);
+    j.at("is_autonamed").get_to(f.is_autonamed);
+    j.at("labels").get_to(f.labels);
+}
+
+void from_json(const nlohmann::json& j, IdaName& n) {
+    j.at("rva").get_to(n.rva);
+    j.at("name").get_to(n.name);
+    j.at("is_public").get_to(n.is_public);
+    j.at("is_func").get_to(n.is_func);
+}
+
 IdaDb::IdaDb(std::filesystem::path& filepath)
 {
     load(filepath);
@@ -45,28 +67,15 @@ void IdaDb::load(std::filesystem::path& filepath)
     istream >> json;
 
     //Function
-    _functions.clear();
-    auto& functions = json["functions"];
-    for (auto& function : functions) {
-        IdaFunction idaf{};
-        idaf.name = function["name"].get<std::string>();
-        idaf.is_autonamed = function["is_autonamed"].get<bool>();
-        idaf.is_public = function["is_public"].get<bool>();
-        idaf.start_ea = function["start_ea"].get<uint32_t>();
+    _functions = json.at("functions").get<std::vector<IdaFunction>>();
 
-        _functions.push_back(idaf);
+    //Labels
+    for (auto &idaFunc : _functions) {
+        for (auto &idaLabel : idaFunc.labels) {
+            idaLabel.name = idaFunc.name + ":::" + idaLabel.name;
+        }
     }
 
     //Names
-    _names.clear();
-    auto& names = json["names"];
-    for (auto& name : names) {
-        IdaName idan{};
-        idan.name = name["name"].get<std::string>();
-        idan.is_func = name["is_func"].get<bool>();
-        idan.is_public = name["is_public"].get<bool>();
-        idan.ea = name["ea"].get<uint32_t>();
-        
-        _names.push_back(idan);
-    }
+    _names = json.at("names").get<std::vector<IdaName>>();
 }
