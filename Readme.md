@@ -71,3 +71,6 @@ Inspired by:
 Based on:
   * LLVM project https://llvm.org/
   * LLD project https://lld.llvm.org/
+  
+Also take look at:
+  * bao https://github.com/not-wlan/bao
