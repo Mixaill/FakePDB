@@ -27,6 +27,7 @@ import traceback
 import ida_auto
 import ida_kernwin
 import ida_loader
+import ida_nalt
 
 from .dumpinfo import InformationDumper
 
@@ -77,10 +78,15 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
 
         #get exe location
         filepath_ida = ida_loader.get_path(ida_loader.PATH_TYPE_IDB)
+        filepath_input = ida_nalt.get_input_file_path()
+
+        filename = os.path.basename(filepath_input) # app.exe / app.dll
+
         pre, _ = os.path.splitext(filepath_ida)
         pre, _ = os.path.splitext(pre)
-        filepath_exe = pre + ".exe"
-        filepath_json = pre + ".exe.json"
+
+        filepath_exe = filepath_input
+        filepath_json = pre + ".json"
         filepath_pdb = pre + ".pdb"
 
         #generate json       
