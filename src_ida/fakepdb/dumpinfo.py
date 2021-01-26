@@ -275,7 +275,7 @@ class __fakepdb_dumpinfo_actionhandler(ida_kernwin.action_handler_t):
 
         filepath = ida_loader.get_path(ida_loader.PATH_TYPE_IDB)
         pre, _ = os.path.splitext(filepath)
-        filepath = pre + ".exe.json"
+        filepath = pre + ".json"
 
         dumper = InformationDumper()
         print('FakePDB/dumpinfo:')
