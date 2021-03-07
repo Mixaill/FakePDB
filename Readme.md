@@ -69,6 +69,9 @@ where:
  * `YYYY`: offset from the begining of the section in decimal numbers
  * 0x0124567AF: IDA effective address
 
+## Useful links
+
+* Disable PDB validation in WinDbg http://ntcoder.com/bab/2012/03/06/how-to-force-symbol-loading-in-windbg/
 
 ## Thanks
 
