@@ -1,6 +1,8 @@
 build/
 ~build/
+cmake-build-*/
 
+.idea/
 .vscode/
 
 *.pyc

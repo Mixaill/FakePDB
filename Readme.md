@@ -2,7 +2,14 @@
 
 Tool for PDB generation from IDA Pro database
 
-Supports IDA >= 7.0
+Supports:
+* IDA >= 7.4
+
+## TODO
+
+* Linux support
+* GHIDRA support
+* Function arguments support
 
 ## How to get
 
@@ -13,31 +20,37 @@ Supports IDA >= 7.0
 
 ## How to install
 
-* copy content of `fakepdb.zip` to `<IDA_directory>/plugins`
+* IDA
+  * copy content of `fakepdb.zip/ida` to `<IDA_directory>/plugins`
 
 ## How to use
 
 There are several features in this plugin:
 
-### 1. PDB file generation
-  * Open target executable in IDA >= 7.0
+### PDB file generation
+  * Open target executable in IDA
   * `Edit` -> `FakePDB` -> `Generate .PDB file` (or `Ctrl`+`Shift`+`4`)
   * get PDB file from the IDA database directory
 
   The PDB can optionally include symbols for function labels: use `Generate .PDB file (with function labels)` (or `Ctrl`+`Shift`+`5`).
 
-### 2. IDA database export to .json
+### LIB file generation
+  * Open target executable in IDA
+  * `Edit` -> `FakePDB` -> `Generate .LIB file`
+  * get LIB file from the IDA database directory
+
+### IDA database export to .json
   * Open target executable in IDA >= 7.0
   * `Edit` -> `FakePDB` -> `Dump info to .json` (or `Ctrl`+`Shift`+`1`)
   * it will generate `filename.json` near the `.idb` file
 
-### 3. Binary signature search
+### Binary signature search
   * Open target executable in IDA >= 7.0
   * Set cursor on start of the target function
   * `Edit` -> `FakePDB` -> `Find signature` (or `Ctrl`+`Shift`+`2`)
   * signature will be displayed in IDA console
 
-### 4. Function names import from `.json` file
+### Function names import from `.json` file
   * Open target executable in IDA >= 7.0
   * `Edit` -> `FakePDB` -> `Import offset from .json` (or `Ctrl`+`Shift`+`3`)
 
@@ -55,12 +68,6 @@ where:
  * `XXXX`: number of the PE section
  * `YYYY`: offset from the begining of the section in decimal numbers
  * 0x0124567AF: IDA effective address
-
-## TODO
-
-* GHIDRA support
-* Linux support
-* Function arguments support
 
 
 ## Thanks
