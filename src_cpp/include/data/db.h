@@ -13,7 +13,7 @@ namespace FakePDB::Data{
         explicit DB();
         explicit DB(std::filesystem::path& filepath);
 
-        General& General();
+        SectionGeneral& General();
         std::vector<Segment>& Segments();
         std::vector<Export>& Exports();
         std::vector<Function>& Functions();

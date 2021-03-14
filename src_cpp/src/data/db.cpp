@@ -32,7 +32,7 @@ namespace FakePDB::Data {
         load(filepath);
     }
 
-    General& DB::General(){
+    SectionGeneral& DB::General(){
         return _root.general;
     }
 

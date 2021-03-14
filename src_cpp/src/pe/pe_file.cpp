@@ -1,5 +1,5 @@
 /**
-   Copyright 2019 Mikhail Paulyshka
+   Copyright 2019-2021 Mikhail Paulyshka
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -57,7 +57,10 @@ namespace FakePDB::PE {
         const llvm::codeview::DebugInfo* DebugInfo;
         llvm::StringRef PDBFileName;
 
-        _obj->getDebugPDBInfo(DebugInfo, PDBFileName);
+        if(_obj->getDebugPDBInfo(DebugInfo, PDBFileName)){
+            return "";
+        }
+
         return std::filesystem::path(std::string(PDBFileName));
     }
 

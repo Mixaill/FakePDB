@@ -11,7 +11,7 @@
 #include "data/label.h"
 
 namespace FakePDB::Data {
-    struct General {
+    struct SectionGeneral {
         std::string filename;
         std::string architecture;
         uint32_t bitness;
@@ -21,5 +21,5 @@ namespace FakePDB::Data {
         }
     };
 
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(General, filename, architecture, bitness)
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SectionGeneral, filename, architecture, bitness)
 }

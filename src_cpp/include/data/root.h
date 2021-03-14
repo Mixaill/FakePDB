@@ -15,7 +15,7 @@
 
 namespace FakePDB::Data {
     struct Root {
-        General general;
+        SectionGeneral general;
         std::vector<Segment> segments;
         std::vector<Export> exports;
         std::vector<Function> functions;
@@ -29,6 +29,7 @@ namespace FakePDB::Data {
         nlohmann_json_j["functions"] = nlohmann_json_t.functions;
         nlohmann_json_j["names"] = nlohmann_json_t.names;
     }
+
     inline void from_json(const nlohmann::json &nlohmann_json_j, Root &nlohmann_json_t) {
         if(nlohmann_json_j.contains("general")) {
             nlohmann_json_j.at("general").get_to(nlohmann_json_t.general);
