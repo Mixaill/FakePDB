@@ -1,31 +1,122 @@
+#!/usr/bin/env pwsh
+
 #
 # Config
 #
 
 $build_llvm = $true
 
-#
-# Set environment 
-#
 
+#
+# Set root dir
+#
 Push-Location $PSScriptRoot
 $root = (Get-Location).Path -replace "\\","/"
 
-#https://stackoverflow.com/a/64744522
-Push-Location "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools"
-cmd /c "VsDevCmd.bat -arch=amd64 -host_arch=amd64&set " |
-ForEach-Object {
-  if ($_ -match "=") {
-    $v = $_.split("="); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
-  }
+
+#
+# Helpers
+#
+
+function Get-OS()
+{
+    if($PSVersionTable.PSEdition -ne "Core")
+    {
+        return "windows"
+    }
+
+    if($PSVersionTable.OS.StartsWith("Microsoft"))
+    {
+        return "windows"
+    }
+
+    if($PSVersionTable.OS.StartsWith("Linux"))
+    {
+        return "linux"
+    }
+
+    return "unknown"
 }
-Pop-Location
+
+
+function Get-Architecture()
+{
+    $os = Get-OS
+
+    if($os -eq "windows")
+    {
+        switch(${env:PROCESSOR_ARCHITECTURE})
+        {
+            AMD64
+            {
+                return "amd64"
+            }
+            x86
+            {
+                return "i686"
+            }
+        }
+    }
+    elseif($os -eq "linux")
+    {
+        switch ($(uname -m))
+        {
+            x86_64
+            {
+                return "amd64"
+            }
+        }
+    }
+
+    return "Unknown"
+}
+
+function Set-BuildEnvironment(){
+    if("windows" -eq $(Get-OS)){
+        #https://stackoverflow.com/a/64744522
+        Push-Location "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools"
+        cmd /c "VsDevCmd.bat -arch=amd64 -host_arch=amd64&set " |
+        ForEach-Object {
+        if ($_ -match "=") {
+            $v = $_.split("="); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
+        }
+        }
+        Pop-Location
+    }
+}
+
+
+function Sign-IsAvailable(){
+    if ("windows" -ne $(Get-OS)){
+        return $false
+    }
+
+    return $null -ne $(Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert)
+}
+
+function Sign-File($FilePath, $TimestampServer = "http://time.certum.pl/")
+{
+    $cert=Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert
+    Set-AuthenticodeSignature -FilePath $FilePath -Certificate $cert -TimestampServer $TimestampServer
+}
+
+function Sign-Folder($Folder, $Filters = @("*.exe", "*.dll"), $TimestampServer = "http://time.certum.pl/")
+{
+    foreach($filter in $Filters){
+        $files = Get-ChildItem -Path $Folder -Filter $filter -Recurse -ErrorAction SilentlyContinue -Force
+
+        foreach ($file in $files) {
+            Sign-File -FilePath $file.FullName -TimestampServer $TimestampServer
+        }
+    }
+}
+
 
 #
-# Build LLVM
+# Build functions
 #
 
-if($true -eq $build_llvm){
+function Build-LLVM(){
     git clone --depth=1 https://github.com/llvm/llvm-project "./~build/llvm_git"
 
     cmake "./~build/llvm_git/llvm" `
@@ -57,63 +148,59 @@ if($true -eq $build_llvm){
     cmake --install "./~build/llvm_build"
 }
 
-#
-# Build PDBGen
-#
+function Build-FakePDB(){
+    cmake "./src_cpp/" `
+        -B"./~build/fakepdb_build" `
+        -GNinja `
+        -DCMAKE_BUILD_TYPE="Release" `
+        -DCMAKE_INSTALL_PREFIX="./~build/fakepdb_install" `
+        -DCMAKE_PREFIX_PATH="$root/~build/llvm_install"
 
-cmake "./src_cpp/" `
-    -B"./~build/fakepdb_build" `
-    -GNinja `
-    -DCMAKE_BUILD_TYPE="Release" `
-    -DCMAKE_INSTALL_PREFIX="./~build/fakepdb_install" `
-    -DCMAKE_PREFIX_PATH="$root/~build/llvm_install"
-
-cmake --build "./~build/fakepdb_build"
-cmake --install "./~build/fakepdb_build"
-
-#
-# Sign
-#
-
-function Sign-IsAvailable(){
-    return $null -ne $(Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert)
-}
-function Sign-File($FilePath, $TimestampServer = "http://time.certum.pl/")
-{
-    $cert=Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert
-    Set-AuthenticodeSignature -FilePath $FilePath -Certificate $cert -TimestampServer $TimestampServer
+    cmake --build "./~build/fakepdb_build"
+    cmake --install "./~build/fakepdb_build"
 }
 
-function Sign-Folder($Folder, $Filters = @("*.exe", "*.dll"), $TimestampServer = "http://time.certum.pl/")
-{
-    foreach($filter in $Filters){
-        $files = Get-ChildItem -Path $Folder -Filter $filter -Recurse -ErrorAction SilentlyContinue -Force
 
-        foreach ($file in $files) {
-            Sign-File -FilePath $file.FullName -TimestampServer $TimestampServer
-        }
+#
+# Build pipeline
+#
+
+function Build(){
+    Set-BuildEnvironment
+
+    if($true -eq $build_llvm){
+        Build-LLVM
     }
+
+    Build-FakePDB
+
+    if(Sign-IsAvailable){
+        Write-Output "Signing files"
+        Sign-Folder -Folder "./~build/fakepdb_install/bin/"
+        Write-Output ""
+    }
+    
+    #
+    # Copy files
+    #
+    
+    Remove-Item -Path "./~build/deploy/ida" -Recurse -ErrorAction SilentlyContinue
+    New-Item -Path "./~build/deploy/ida" -ItemType Directory -ErrorAction SilentlyContinue
+    Copy-Item -Path "./src_plugins/ida/*" -Destination "./~build/deploy/ida/" -Recurse
+    
+
+    $foldername = "$(Get-OS)_$(Get-Architecture)"
+    New-Item -Path "./~build/deploy/ida/fakepdb/$foldername/" -ItemType Directory -ErrorAction SilentlyContinue
+    Copy-Item -Path "./~build/fakepdb_install/bin/*" -Destination "./~build/deploy/ida/fakepdb/$foldername/" -Recurse
+    
+    #
+    # Pack files
+    #
+    Remove-Item -Path "./~build/deploy/fakepdb.zip" -ErrorAction SilentlyContinue
+    Compress-Archive -Path "./~build/deploy/*" -DestinationPath "./~build/deploy/fakepdb.zip"
+      
 }
 
-if(Sign-IsAvailable){
-    Write-Output "Signing files"
-    Sign-Folder -Folder "./~build/fakepdb_install/bin/"
-    Write-Output ""
-}
-
-#
-# Copy files
-#
-
-New-Item -Path "./~build/deploy/ida" -ItemType Directory -ErrorAction SilentlyContinue
-Copy-Item -Path "./src_plugins/ida/*" -Destination "./~build/deploy/ida/" -Recurse
-
-New-Item -Path "./~build/deploy/ida/fakepdb/win32/" -ItemType Directory -ErrorAction SilentlyContinue
-Copy-Item -Path "./~build/fakepdb_install/bin/*.exe" -Destination "./~build/deploy/ida/fakepdb/win32/" -Recurse
-
-#
-# Pack files
-#
-Compress-Archive -Path "./~build/deploy/*" -DestinationPath "./~build/deploy/fakepdb.zip"
+Build
 
 Pop-Location
