@@ -17,8 +17,13 @@
 
 //llvm
 #include <llvm/DebugInfo/CodeView/SymbolSerializer.h>
+#include <llvm/DebugInfo/MSF/MSFBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/DbiModuleDescriptorBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h>
+#include <llvm/DebugInfo/PDB/Native/RawTypes.h>
 #include <llvm/Object/COFF.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/Error.h>
 #include <llvm/Support/MemoryBuffer.h>
@@ -34,8 +39,12 @@ namespace FakePDB::PDB {
         llvm::parallelSort(std::begin(Range), std::end(Range), Fn);
     }
 
-    PdbCreator::PdbCreator(PE::PeFile &pefile, bool withLabels) : _pefile(pefile), _withLabels(withLabels),
-                                                              _pdbBuilder(_allocator) {
+    PdbCreator::PdbCreator(PE::PeFile &pefile, bool withLabels) :
+            _pefile(pefile),
+            _symfactory(pefile),
+            _withLabels(withLabels),
+            _pdbBuilder(_allocator)
+    {
     }
 
     bool PdbCreator::Initialize() {
@@ -67,7 +76,7 @@ namespace FakePDB::PDB {
         DbiBuilder.setAge(InfoBuilder.getAge());
         DbiBuilder.setVersionHeader(llvm::pdb::PdbDbiV70);
         DbiBuilder.setMachineType(_pefile.GetMachine());
-        DbiBuilder.setFlags(llvm::pdb::DbiFlags::FlagStrippedMask);
+        DbiBuilder.setFlags(llvm::pdb::DbiFlags::FlagHasCTypesMask);
 
         // Technically we are not link.exe 14.11, but there are known cases where
         // debugging tools on Windows expect Microsoft-specific version numbers or
@@ -123,7 +132,7 @@ namespace FakePDB::PDB {
         //Functions
         for (auto &ida_func : ida_db.Functions()) {
             assert(!ida_func.name.empty());
-            Publics.push_back(createPublicSymbol(ida_func));
+            Publics.push_back(_symfactory.createPublicSymbol(ida_func));
 
             if (_withLabels) {
                 for (const auto &ida_label : ida_func.labels) {
@@ -131,7 +140,7 @@ namespace FakePDB::PDB {
                         continue;
                     }
 
-                    Publics.push_back(createPublicSymbol(ida_label, ida_func));
+                    Publics.push_back(_symfactory.createPublicSymbol(ida_label, ida_func));
                 }
             }
         }
@@ -145,7 +154,7 @@ namespace FakePDB::PDB {
                 continue;
             }
 
-            Publics.push_back(createPublicSymbol(ida_name));
+            Publics.push_back(_symfactory.createPublicSymbol(ida_name));
         }
 
         if (!Publics.empty()) {
@@ -188,38 +197,5 @@ namespace FakePDB::PDB {
         sym.kind = llvm::codeview::SymbolKind::S_GPROC32;
         ModuleDBI->addSymbol(sym);
         */
-    }
-
-    llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(Data::Function &idaFunc) {
-        llvm::pdb::BulkPublic public_sym;
-        public_sym.Name = idaFunc.name.c_str();
-        public_sym.NameLen = idaFunc.name.size();
-        public_sym.setFlags(llvm::codeview::PublicSymFlags::Function);
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_rva);
-
-        return public_sym;
-    }
-
-    llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(const Data::Label &idaLabel, const Data::Function &idaFunc) {
-        llvm::pdb::BulkPublic public_sym;
-        public_sym.Name = idaLabel.name.c_str();
-        public_sym.NameLen = idaLabel.name.size();
-        public_sym.setFlags(llvm::codeview::PublicSymFlags::Code);
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaLabel.offset + idaFunc.start_rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaLabel.offset + idaFunc.start_rva);
-
-        return public_sym;
-    }
-
-    llvm::pdb::BulkPublic PdbCreator::createPublicSymbol(Data::Name &idaName) {
-        llvm::pdb::BulkPublic public_sym;
-        public_sym.Name = idaName.name.c_str();
-        public_sym.NameLen = idaName.name.size();
-        public_sym.setFlags(llvm::codeview::PublicSymFlags::None);
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaName.rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaName.rva);
-
-        return public_sym;
     }
 }

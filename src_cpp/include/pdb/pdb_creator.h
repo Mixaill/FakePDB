@@ -17,17 +17,12 @@
 #pragma once
 
 //llvm
-#include <llvm/DebugInfo/CodeView/SymbolRecord.h>
-#include <llvm/DebugInfo/MSF/MSFBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/PDBFileBuilder.h>
-#include <llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h>
-#include <llvm/DebugInfo/PDB/Native/GSIStreamBuilder.h>
-#include <llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h>
 #include <llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h>
-#include <llvm/DebugInfo/PDB/Native/RawConstants.h>
 
 //fakepdb
 #include "data/db.h"
+#include "pdb/pdb_symfactory.h"
 #include "pe/pe_file.h"
 
 namespace FakePDB::PDB {
@@ -53,13 +48,9 @@ namespace FakePDB::PDB {
 
         void processSymbols();
 
-        llvm::pdb::BulkPublic createPublicSymbol(Data::Function &idaFunc);
-
-        llvm::pdb::BulkPublic createPublicSymbol(const Data::Label &idaLabel, const Data::Function &idaFunc);
-
-        llvm::pdb::BulkPublic createPublicSymbol(Data::Name &idaName);
 
         PE::PeFile &_pefile;
+        PDB::PdbSymFactory _symfactory;
 
         bool _withLabels;
 
