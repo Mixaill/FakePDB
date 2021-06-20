@@ -33,40 +33,39 @@
 namespace FakePDB::PE {
     class PeFile {
     public:
-        PeFile(const std::filesystem::path &path);
+        explicit PeFile(const std::filesystem::path &path);
 
-        std::vector<uint8_t> GetPdbGuid();
+        [[nodiscard]] std::vector<uint8_t> GetPdbGuid() const;
 
-        uint32_t GetPdbAge();
+        [[nodiscard]] uint32_t GetPdbAge() const;
 
-        std::filesystem::path GetPdbFilepath();
+        [[nodiscard]] std::filesystem::path GetPdbFilepath() const;
 
-        std::filesystem::path GetPdbFilename();
+        [[nodiscard]] std::filesystem::path GetPdbFilename() const;
 
-        llvm::ArrayRef<llvm::object::coff_section> GetSectionHeaders();
+        [[nodiscard]] llvm::ArrayRef<llvm::object::coff_section> GetSectionHeaders() const;
 
-        uint16_t GetSectionIndexForRVA(uint32_t RVA);
+        [[nodiscard]] uint16_t GetSectionIndexForRVA(uint32_t RVA) const;
 
-        uint32_t GetSectionOffsetForRVA(uint32_t RVA);
+        [[nodiscard]] uint32_t GetSectionOffsetForRVA(uint32_t RVA) const;
 
-        uint32_t GetTimestamp();
+        [[nodiscard]] uint32_t GetTimestamp() const;
 
-        uint32_t GetImageSize();
+        [[nodiscard]] uint32_t GetImageSize() const;
 
-        std::vector<Data::Export> GetExports();
+        [[nodiscard]] std::vector<Data::Export> GetExports() const;
 
-        llvm::COFF::MachineTypes GetMachine();
+        [[nodiscard]] llvm::COFF::MachineTypes GetMachine() const;
 
-        std::string GetMachineName();
+        [[nodiscard]] std::string GetMachineName() const;
 
-        uint32_t GetMachineBitness();
+        [[nodiscard]] uint32_t GetMachineBitness() const;
 
     private:
 
         llvm::Expected<llvm::object::OwningBinary<llvm::object::Binary>> _binary;
-        llvm::object::COFFObjectFile *_obj;
+        llvm::object::COFFObjectFile *_obj = nullptr;
 
         std::vector<llvm::object::coff_section> _sectionHeaders;
-
     };
 }

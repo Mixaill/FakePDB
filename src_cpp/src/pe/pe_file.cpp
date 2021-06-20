@@ -28,7 +28,7 @@ namespace FakePDB::PE {
         }
     }
 
-    std::vector<uint8_t> PeFile::GetPdbGuid()
+    std::vector<uint8_t> PeFile::GetPdbGuid() const
     {
         const llvm::codeview::DebugInfo* DebugInfo;
         llvm::StringRef PDBFileName;
@@ -40,7 +40,7 @@ namespace FakePDB::PE {
         return std::vector<uint8_t>(&DebugInfo->PDB70.Signature[0], &DebugInfo->PDB70.Signature[16]);
     }
 
-    uint32_t PeFile::GetPdbAge()
+    uint32_t PeFile::GetPdbAge() const
     {
         const llvm::codeview::DebugInfo* DebugInfo = nullptr;
         llvm::StringRef PDBFileName;
@@ -52,7 +52,7 @@ namespace FakePDB::PE {
         return DebugInfo->PDB70.Age;
     }
 
-    std::filesystem::path PeFile::GetPdbFilepath()
+    std::filesystem::path PeFile::GetPdbFilepath() const
     {
         const llvm::codeview::DebugInfo* DebugInfo;
         llvm::StringRef PDBFileName;
@@ -64,12 +64,12 @@ namespace FakePDB::PE {
         return std::filesystem::path(std::string(PDBFileName));
     }
 
-    std::filesystem::path PeFile::GetPdbFilename()
+    std::filesystem::path PeFile::GetPdbFilename() const
     {
         return GetPdbFilepath().filename();
     }
 
-    llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders()
+    llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders() const
     {
         const auto number_of_sections = _obj->getNumberOfSections();
         const auto* section = _obj->getCOFFSection(*_obj->sections().begin());
@@ -77,7 +77,7 @@ namespace FakePDB::PE {
         return llvm::ArrayRef<llvm::object::coff_section>(section, number_of_sections);
     }
 
-    uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA)
+    uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA) const
     {
         uint16_t index = 1;
         for (auto& section : GetSectionHeaders()) {
@@ -91,7 +91,7 @@ namespace FakePDB::PE {
         return 0;
     }
 
-    uint32_t PeFile::GetSectionOffsetForRVA(uint32_t RVA)
+    uint32_t PeFile::GetSectionOffsetForRVA(uint32_t RVA) const
     {
         for (auto& section : GetSectionHeaders()) {
             if (section.VirtualAddress <= RVA && section.VirtualAddress + section.VirtualSize >= RVA) {
@@ -102,12 +102,12 @@ namespace FakePDB::PE {
         return 0;
     }
 
-    uint32_t PeFile::GetTimestamp()
+    uint32_t PeFile::GetTimestamp() const
     {
         return _obj->getTimeDateStamp();
     }
 
-    uint32_t PeFile::GetImageSize()
+    uint32_t PeFile::GetImageSize() const
     {
         auto* pe32 = _obj->getPE32Header();
         if (pe32) {
@@ -122,7 +122,7 @@ namespace FakePDB::PE {
         return 0;
     }
 
-    std::vector<Data::Export> PeFile::GetExports()
+    std::vector<Data::Export> PeFile::GetExports() const
     {
         std::vector<Data::Export> result;
 
@@ -149,11 +149,11 @@ namespace FakePDB::PE {
         return result;
     }
 
-    llvm::COFF::MachineTypes PeFile::GetMachine() {
+    llvm::COFF::MachineTypes PeFile::GetMachine() const {
         return static_cast<llvm::COFF::MachineTypes>(_obj->getMachine());
     }
 
-    uint32_t PeFile::GetMachineBitness() {
+    uint32_t PeFile::GetMachineBitness() const {
         switch(GetMachine()){
             case llvm::COFF::IMAGE_FILE_MACHINE_ARM:
             case llvm::COFF::IMAGE_FILE_MACHINE_ARMNT:
@@ -168,7 +168,7 @@ namespace FakePDB::PE {
         }
     }
 
-    std::string PeFile::GetMachineName() {
+    std::string PeFile::GetMachineName() const {
         switch(GetMachine()){
             case llvm::COFF::IMAGE_FILE_MACHINE_ARM:
             case llvm::COFF::IMAGE_FILE_MACHINE_ARMNT:
