@@ -46,8 +46,7 @@ namespace FakePDB::Commands {
 
             Data::DB db(path_json);
 
-            COFF::LibCreator libCreator;
-            if(!libCreator.Create(db, path_lib)) {
+            if(!COFF::LibCreator::Create(db, path_lib)) {
                 std::cerr << "failed to create lib";
                 return 2;
             }

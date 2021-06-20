@@ -9,6 +9,9 @@
 namespace FakePDB::COFF {
     class LibCreator {
     public:
-        bool Create(Data::DB &db, std::filesystem::path& path);
+        LibCreator() = delete;
+        ~LibCreator() = delete;
+
+        static bool Create(Data::DB &db, std::filesystem::path& path);
     };
 }
