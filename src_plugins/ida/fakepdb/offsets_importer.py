@@ -58,7 +58,7 @@ class OffsetsImporter:
         with open(filepath, 'r') as f:
             offsets = json.load(f)
 
-            for key, value in offsets.iteritems():
+            for key, value in offsets.items():
                 self.__import_name(segments, key, value)
 
     #
@@ -92,7 +92,7 @@ class OffsetsImporter:
             name_addr = int(addr_components[0], 16)
 
         #replace <> in name because IDA does not support it
-        name = name.replace('<','(').replace('>',')').encode('ascii')
+        name = name.replace('<','(').replace('>',')')
 
         #fix situation where name already exists
         while ida_name.get_name_ea(ida_idaapi.BADADDR, name) != ida_idaapi.BADADDR:
