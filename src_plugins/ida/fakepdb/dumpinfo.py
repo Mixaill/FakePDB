@@ -149,7 +149,8 @@ class DumpInfo():
                 segm = {
                     'name'      : ida_segment.get_segm_name(seg),
                     'start_rva' : seg.start_ea - self._base,
-                    'type'     : ida_segment.get_segm_class(seg),
+                    'end_rva'   : seg.end_ea - self._base,
+                    'type'      : ida_segment.get_segm_class(seg),
                     'selector'  : seg.sel
                 }
                 
