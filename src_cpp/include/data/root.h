@@ -16,7 +16,7 @@
 namespace FakePDB::Data {
     struct Root {
         SectionGeneral general;
-        std::vector<Segment> segments;
+        SegmentArray segments;
         std::vector<Export> exports;
         std::vector<Function> functions;
         std::vector<Name> names;
