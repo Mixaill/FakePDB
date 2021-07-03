@@ -77,6 +77,7 @@ namespace FakePDB::PE {
         return llvm::ArrayRef<llvm::object::coff_section>(section, number_of_sections);
     }
 
+
     uint16_t PeFile::GetSectionIndexForRVA(uint32_t RVA) const
     {
         uint16_t index = 1;
@@ -182,5 +183,23 @@ namespace FakePDB::PE {
             default:
                 return "unknown";
         }
+    }
+
+    Data::SegmentArray PeFile::GetSections() const {
+        Data::SegmentArray result;
+
+        auto sections = GetSectionHeaders();
+        for(uint32_t i = 0; i < sections.size(); i++){
+            Data::Segment seg = {
+                    .name = sections[i].Name,
+                    .start_rva = sections[i].VirtualAddress,
+                    .end_rva = sections[i].VirtualAddress + sections[i].VirtualSize,
+                    .selector = i + 1
+            };
+
+            result.push_back(seg);
+        }
+
+        return result;
     }
 }

@@ -29,6 +29,7 @@
 
 //fakepdb
 #include "data/export.h"
+#include "data/segment.h"
 
 namespace FakePDB::PE {
     class PeFile {
@@ -43,18 +44,23 @@ namespace FakePDB::PE {
 
         [[nodiscard]] std::filesystem::path GetPdbFilename() const;
 
-        [[nodiscard]] llvm::ArrayRef<llvm::object::coff_section> GetSectionHeaders() const;
-
-        [[nodiscard]] uint16_t GetSectionIndexForRVA(uint32_t RVA) const;
-
-        [[nodiscard]] uint32_t GetSectionOffsetForRVA(uint32_t RVA) const;
-
         [[nodiscard]] uint32_t GetTimestamp() const;
 
         [[nodiscard]] uint32_t GetImageSize() const;
 
         [[nodiscard]] std::vector<Data::Export> GetExports() const;
 
+        //Sections
+        [[nodiscard]] llvm::ArrayRef<llvm::object::coff_section> GetSectionHeaders() const;
+
+        [[nodiscard]] Data::SegmentArray GetSections() const;
+
+        [[nodiscard]] uint16_t GetSectionIndexForRVA(uint32_t RVA) const;
+
+        [[nodiscard]] uint32_t GetSectionOffsetForRVA(uint32_t RVA) const;
+
+
+        //Machine
         [[nodiscard]] llvm::COFF::MachineTypes GetMachine() const;
 
         [[nodiscard]] std::string GetMachineName() const;
