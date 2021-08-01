@@ -36,7 +36,7 @@ namespace FakePDB::Data {
         return _root.general;
     }
 
-    std::vector<Segment>& DB::Segments(){
+    SegmentArray& DB::Segments(){
         return _root.segments;
     }
 

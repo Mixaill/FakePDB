@@ -33,7 +33,7 @@ namespace FakePDB::Commands {
         }
 
         std::string GetCommandDescription() override {
-            return "returns exports in the fiven PE files";
+            return "returns exports in the given PE file";
         }
 
         int Run(int argc, char* argv[]) override {
@@ -51,6 +51,7 @@ namespace FakePDB::Commands {
             db.General().architecture = pefile.GetMachineName();
             db.General().bitness = pefile.GetMachineBitness();
             db.Exports() = pefile.GetExports();
+            db.Segments() = pefile.GetSections();
 
             if (argc == 3)
             {

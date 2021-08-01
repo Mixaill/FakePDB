@@ -22,19 +22,16 @@
 
 //fakepdb
 #include "data/db.h"
-#include "pe/pe_file.h"
 
 namespace FakePDB::PDB {
 
     class PdbSymFactory{
     public:
-        explicit PdbSymFactory(PE::PeFile& peFile);
+        PdbSymFactory() = delete;
+        ~PdbSymFactory() = delete;
 
-        [[nodiscard]] llvm::pdb::BulkPublic createPublicSymbol(Data::Function &idaFunc) const;
-        [[nodiscard]] llvm::pdb::BulkPublic createPublicSymbol(const Data::Label &idaLabel, const Data::Function &idaFunc) const;
-        [[nodiscard]] llvm::pdb::BulkPublic createPublicSymbol(Data::Name &idaName) const;
-    private:
-
-        PE::PeFile& _pefile;
+        [[nodiscard]] static llvm::pdb::BulkPublic createPublicSymbol(const Data::SegmentArray& segments, const Data::Function &idaFunc);
+        [[nodiscard]] static llvm::pdb::BulkPublic createPublicSymbol(const Data::SegmentArray& segments, const Data::Label &idaLabel, const Data::Function &idaFunc);
+        [[nodiscard]] static llvm::pdb::BulkPublic createPublicSymbol(const Data::SegmentArray& segments, const Data::Name &idaName);
     };
 }

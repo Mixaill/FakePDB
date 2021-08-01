@@ -19,24 +19,7 @@ namespace FakePDB::COFF {
 
         auto info = db.General();
 
-        auto machine_type = llvm::COFF::IMAGE_FILE_MACHINE_UNKNOWN;
-        if(info.architecture == "x86"){
-            if(info.bitness == 64){
-                machine_type = llvm::COFF::IMAGE_FILE_MACHINE_AMD64;
-            }
-            else if (info.bitness == 32) {
-                machine_type = llvm::COFF::IMAGE_FILE_MACHINE_I386;
-            }
-        }
-        else if(info.architecture == "arm"){
-            if(info.bitness == 64){
-                machine_type = llvm::COFF::IMAGE_FILE_MACHINE_ARM64;
-            }
-            else if (info.bitness == 32) {
-                machine_type = llvm::COFF::IMAGE_FILE_MACHINE_ARMNT;
-            }
-        }
-
+        auto machine_type =  info.getMachineType();
         if(machine_type == llvm::COFF::IMAGE_FILE_MACHINE_UNKNOWN){
             return false;
         }

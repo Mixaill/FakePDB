@@ -23,16 +23,12 @@
 
 namespace FakePDB::PDB {
 
-    PdbSymFactory::PdbSymFactory(PE::PeFile &peFile) : _pefile(peFile) {
-
-    }
-
-    llvm::pdb::BulkPublic PdbSymFactory::createPublicSymbol(Data::Function &idaFunc) const {
+    llvm::pdb::BulkPublic PdbSymFactory::createPublicSymbol(const Data::SegmentArray& segments, const Data::Function &idaFunc) {
         llvm::pdb::BulkPublic public_sym;
         public_sym.Name = idaFunc.name.c_str();
         public_sym.NameLen = idaFunc.name.size();
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaFunc.start_rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaFunc.start_rva);
+        public_sym.Segment = segments.getSectionIndexByRva(idaFunc.start_rva);
+        public_sym.Offset = segments.getSectionOffsetByRva(idaFunc.start_rva);
 
         public_sym.setFlags(llvm::codeview::PublicSymFlags::Code | llvm::codeview::PublicSymFlags::Function);
 
@@ -40,26 +36,26 @@ namespace FakePDB::PDB {
     }
 
     llvm::pdb::BulkPublic
-    PdbSymFactory::createPublicSymbol(const Data::Label &idaLabel, const Data::Function &idaFunc) const {
+    PdbSymFactory::createPublicSymbol(const Data::SegmentArray& segments, const Data::Label &idaLabel, const Data::Function &idaFunc) {
         llvm::pdb::BulkPublic public_sym;
 
         public_sym.Name = idaLabel.name.c_str();
         public_sym.NameLen = idaLabel.name.size();
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaLabel.offset + idaFunc.start_rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaLabel.offset + idaFunc.start_rva);
+        public_sym.Segment = segments.getSectionIndexByRva(idaLabel.offset + idaFunc.start_rva);
+        public_sym.Offset = segments.getSectionOffsetByRva(idaLabel.offset + idaFunc.start_rva);
 
         public_sym.setFlags(llvm::codeview::PublicSymFlags::Code);
 
         return public_sym;
     }
 
-    llvm::pdb::BulkPublic PdbSymFactory::createPublicSymbol(Data::Name &idaName) const {
+    llvm::pdb::BulkPublic PdbSymFactory::createPublicSymbol(const Data::SegmentArray& segments, const Data::Name &idaName) {
         llvm::pdb::BulkPublic public_sym;
 
         public_sym.Name = idaName.name.c_str();
         public_sym.NameLen = idaName.name.size();
-        public_sym.Segment = _pefile.GetSectionIndexForRVA(idaName.rva);
-        public_sym.Offset = _pefile.GetSectionOffsetForRVA(idaName.rva);
+        public_sym.Segment = segments.getSectionIndexByRva(idaName.rva);
+        public_sym.Offset = segments.getSectionOffsetByRva(idaName.rva);
 
         public_sym.setFlags(llvm::codeview::PublicSymFlags::None);
 

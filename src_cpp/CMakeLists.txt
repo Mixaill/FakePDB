@@ -73,6 +73,7 @@ target_sources(fakepdb PRIVATE
     include/data/root.h
     include/data/segment.h
     src/data/db.cpp
+    src/data/segment.cpp
 
     include/pdb/pdb_creator.h
     include/pdb/pdb_symfactory.h

@@ -31,6 +31,7 @@
 
 //fakepdb
 #include "pdb/pdb_creator.h"
+#include "pdb/pdb_symfactory.h"
 
 namespace FakePDB::PDB {
 
@@ -41,7 +42,6 @@ namespace FakePDB::PDB {
 
     PdbCreator::PdbCreator(PE::PeFile &pefile, bool withLabels) :
             _pefile(pefile),
-            _symfactory(pefile),
             _withLabels(withLabels),
             _pdbBuilder(_allocator)
     {
@@ -132,7 +132,7 @@ namespace FakePDB::PDB {
         //Functions
         for (auto &ida_func : ida_db.Functions()) {
             assert(!ida_func.name.empty());
-            Publics.push_back(_symfactory.createPublicSymbol(ida_func));
+            Publics.push_back(PdbSymFactory::createPublicSymbol(ida_db.Segments(), ida_func));
 
             if (_withLabels) {
                 for (const auto &ida_label : ida_func.labels) {
@@ -140,7 +140,7 @@ namespace FakePDB::PDB {
                         continue;
                     }
 
-                    Publics.push_back(_symfactory.createPublicSymbol(ida_label, ida_func));
+                    Publics.push_back(PdbSymFactory::createPublicSymbol(ida_db.Segments(), ida_label, ida_func));
                 }
             }
         }
@@ -154,7 +154,7 @@ namespace FakePDB::PDB {
                 continue;
             }
 
-            Publics.push_back(_symfactory.createPublicSymbol(ida_name));
+            Publics.push_back(PdbSymFactory::createPublicSymbol(ida_db.Segments(), ida_name));
         }
 
         if (!Publics.empty()) {

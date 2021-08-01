@@ -22,7 +22,6 @@
 
 //fakepdb
 #include "data/db.h"
-#include "pdb/pdb_symfactory.h"
 #include "pe/pe_file.h"
 
 namespace FakePDB::PDB {
@@ -50,7 +49,6 @@ namespace FakePDB::PDB {
 
 
         PE::PeFile &_pefile;
-        PDB::PdbSymFactory _symfactory;
 
         bool _withLabels;
 
