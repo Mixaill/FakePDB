@@ -43,7 +43,7 @@ namespace FakePDB::PDB {
 
         void processGSI(Data::DB &ida_db);
 
-        bool processSections();
+        bool processSections(Data::DB& ida_db);
 
         void processSymbols();
 
