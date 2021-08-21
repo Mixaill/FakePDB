@@ -161,11 +161,9 @@ class DumpInfo():
     def __process_function_typeinfo(self, info, func):
 
         tinfo = ida_typeinf.tinfo_t()
+        ida_nalt.get_tinfo(tinfo,func.start_ea)
+        
         func_type_data = ida_typeinf.func_type_data_t()
-        if ida_pro.IDA_SDK_VERSION >= 740:
-            ida_typeinf.guess_tinfo(tinfo,func.start_ea)
-        else:
-            ida_typeinf.guess_tinfo(func.start_ea,tinfo)
         tinfo.get_func_details(func_type_data)
 
         #calling convention
