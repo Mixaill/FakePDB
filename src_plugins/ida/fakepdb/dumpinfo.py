@@ -60,46 +60,48 @@ class DumpInfo():
     def __describe_alignment(self, align):
         #https://hex-rays.com/products/ida/support/sdkdoc/group__sa__.html
         if align == 0:
-            return '1'
+            return 1
         elif align == 1:
-            return '8'
+            return 8
         elif align == 2:
-            return '16'
+            return 16
         elif align == 3:
-            return '128'
+            return 128
         elif align == 4:
-            return '2048'     
+            return 2048     
         elif align == 5:
-            return '32' 
+            return 32 
         elif align == 6:
-            return '32768'
+            return 32768
         elif align == 7:
-            return 'segm_group'
+            return 0
         elif align == 8:
-            return '256'
+            return 256
         elif align == 9:
-            return '512'
+            return 512
         elif align == 10:
-            return '64'
+            return 64
         elif align == 11:
-            return '1024'
+            return 1024
         elif align == 12:
-            return '4096'
+            return 4096
         elif align == 13:
-            return '8192'
+            return 8192
         elif align == 14:
-            return '16384'
+            return 16384
+
+        return 0
 
     def __describe_bitness(self, bitness):
         #https://hex-rays.com/products/ida/support/sdkdoc/classsegment__t.html#a7aa06d5fa4e0fc79e645d082eabf2a6a
         if bitness == 0:
-            return '16'
+            return 16
         elif bitness == 1:
-            return '32'
+            return 32
         elif bitness == 2:
-            return '64'
+            return 64
 
-        return None
+        return 0
 
     def __describe_permission(self, perm):
         #https://hex-rays.com/products/ida/support/sdkdoc/group___s_e_g_p_e_r_m__.html
