@@ -15,6 +15,7 @@
 """
 
 import os.path
+import platform
 import sys
 import subprocess
 
@@ -24,15 +25,17 @@ class Native:
     EXECUTABLE_NAME_LIN = "fakepdb"
 
     def __init__(self):
-        self.__executable_name = ''
-        self.__executable_platform = sys.platform
+        self.__executable_system = platform.system().lower()
+        self.__executable_arch   = platform.machine().lower() 
+        self.__executable_path   = ''
+        self.__executable_name   = ''
 
-        if self.__executable_platform == 'win32':
+        if self.__executable_system == 'windows':
             self.__executable_name = Native.EXECUTABLE_NAME_WIN
-        else:
+        if self.__executable_system == 'linux':
             self.__executable_name = Native.EXECUTABLE_NAME_LIN
 
-        self.__executable_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), self.__executable_platform, self.__executable_name)
+        self.__executable_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '%s_%s' % (self.__executable_system, self.__executable_arch), self.__executable_name)
 
 
     def coff_createlib(self, path_json, path_lib):
