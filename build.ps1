@@ -5,7 +5,7 @@
 #
 
 $build_llvm = $true
-
+$generate_msvc = $false
 
 #
 # Set root dir
@@ -149,15 +149,23 @@ function Build-LLVM(){
 }
 
 function Build-FakePDB(){
+    if ($generate_msvc -eq $true) {
+        cmake "./src_cpp/" `
+            -B"./~build/fakepdb_build" `
+            -DCMAKE_BUILD_TYPE="Release" `
+            -DCMAKE_INSTALL_PREFIX="./~build/fakepdb_install" `
+            -DCMAKE_PREFIX_PATH="$root/~build/llvm_install"
+    }
+
     cmake "./src_cpp/" `
-        -B"./~build/fakepdb_build" `
+        -B"./~build/fakepdb_build_ninja" `
         -GNinja `
         -DCMAKE_BUILD_TYPE="Release" `
         -DCMAKE_INSTALL_PREFIX="./~build/fakepdb_install" `
         -DCMAKE_PREFIX_PATH="$root/~build/llvm_install"
 
-    cmake --build "./~build/fakepdb_build"
-    cmake --install "./~build/fakepdb_build"
+    cmake --build "./~build/fakepdb_build_ninja"
+    cmake --install "./~build/fakepdb_build_ninja"
 }
 
 
