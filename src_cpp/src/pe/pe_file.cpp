@@ -23,17 +23,23 @@
 namespace FakePDB::PE {
     PeFile::PeFile(const std::filesystem::path& path) : _binary(llvm::object::createBinary(path.string()))
     {
-        if (!_binary.takeError()) {
+        auto err = _binary.takeError();
+
+        if (!err) {
             _obj = llvm::dyn_cast<llvm::object::COFFObjectFile>((*_binary).getBinary());
         }
     }
 
     std::vector<uint8_t> PeFile::GetPdbGuid() const
     {
-        const llvm::codeview::DebugInfo* DebugInfo;
+        const llvm::codeview::DebugInfo* DebugInfo = nullptr;
         llvm::StringRef PDBFileName;
 
-        if(_obj->getDebugPDBInfo(DebugInfo, PDBFileName) ||!DebugInfo){
+        if (!_obj) {
+            return std::vector<uint8_t>(16);
+        }
+
+        if (_obj->getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo) {
             return std::vector<uint8_t>(16);
         }
 
@@ -45,7 +51,11 @@ namespace FakePDB::PE {
         const llvm::codeview::DebugInfo* DebugInfo = nullptr;
         llvm::StringRef PDBFileName;
 
-        if(_obj->getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo){
+        if (!_obj) {
+            return 0;
+        }
+        
+        if (_obj->getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo) {
             return 0;
         }
 
@@ -54,10 +64,14 @@ namespace FakePDB::PE {
 
     std::filesystem::path PeFile::GetPdbFilepath() const
     {
-        const llvm::codeview::DebugInfo* DebugInfo;
+        const llvm::codeview::DebugInfo* DebugInfo = nullptr;
         llvm::StringRef PDBFileName;
-
-        if(_obj->getDebugPDBInfo(DebugInfo, PDBFileName)){
+        
+        if (!_obj) {
+            return "";
+        }
+         
+        if (_obj->getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo) {
             return "";
         }
 
@@ -71,6 +85,10 @@ namespace FakePDB::PE {
 
     llvm::ArrayRef<llvm::object::coff_section> PeFile::GetSectionHeaders() const
     {
+        if (!_obj) {
+            return llvm::ArrayRef<llvm::object::coff_section>();
+        }
+
         const auto number_of_sections = _obj->getNumberOfSections();
         const auto* section = _obj->getCOFFSection(*_obj->sections().begin());
 
@@ -151,6 +169,10 @@ namespace FakePDB::PE {
     }
 
     llvm::COFF::MachineTypes PeFile::GetMachine() const {
+        if (!_obj) {
+            return llvm::COFF::MachineTypes::IMAGE_FILE_MACHINE_UNKNOWN;
+        }
+
         return static_cast<llvm::COFF::MachineTypes>(_obj->getMachine());
     }
 
@@ -190,14 +212,7 @@ namespace FakePDB::PE {
 
         auto sections = GetSectionHeaders();
         for(uint32_t i = 0; i < sections.size(); i++){
-            Data::Segment seg = {
-                    .name = sections[i].Name,
-                    .start_rva = sections[i].VirtualAddress,
-                    .end_rva = sections[i].VirtualAddress + sections[i].VirtualSize,
-                    .selector = i + 1
-            };
-
-            result.push_back(seg);
+            result.emplace_back(sections[i], i);
         }
 
         return result;
