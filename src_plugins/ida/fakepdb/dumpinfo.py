@@ -57,6 +57,63 @@ class DumpInfo():
     # private
     #
 
+    def __describe_alignment(self, align):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group__sa__.html
+        if align == 0:
+            return '1'
+        elif align == 1:
+            return '8'
+        elif align == 2:
+            return '16'
+        elif align == 3:
+            return '128'
+        elif align == 4:
+            return '2048'     
+        elif align == 5:
+            return '32' 
+        elif align == 6:
+            return '32768'
+        elif align == 7:
+            return 'segm_group'
+        elif align == 8:
+            return '256'
+        elif align == 9:
+            return '512'
+        elif align == 10:
+            return '64'
+        elif align == 11:
+            return '1024'
+        elif align == 12:
+            return '4096'
+        elif align == 13:
+            return '8192'
+        elif align == 14:
+            return '16384'
+
+    def __describe_bitness(self, bitness):
+        #https://hex-rays.com/products/ida/support/sdkdoc/classsegment__t.html#a7aa06d5fa4e0fc79e645d082eabf2a6a
+        if bitness == 0:
+            return '16'
+        elif bitness == 1:
+            return '32'
+        elif bitness == 2:
+            return '64'
+
+        return None
+
+    def __describe_permission(self, perm):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group___s_e_g_p_e_r_m__.html
+
+        result = ''
+        if perm & 4: 
+            result += 'R'
+        if perm & 2: 
+            result += 'W'
+        if perm & 1: 
+            result += 'X'
+
+        return result
+
     def __describe_argloc(self, location):
         #https://www.hex-rays.com/products/ida/support/sdkdoc/group___a_l_o_c__.html
         if   location == 0:
@@ -147,11 +204,14 @@ class DumpInfo():
             seg = ida_segment.getnseg(n)
             if seg:
                 segm = {
+                    'align'     : self.__describe_alignment(seg.align),
+                    'bitness'   : self.__describe_bitness(seg.bitness),
                     'name'      : ida_segment.get_segm_name(seg),
-                    'start_rva' : seg.start_ea - self._base,
-                    'end_rva'   : seg.end_ea - self._base,
+                    'rva_start' : seg.start_ea - self._base,
+                    'rva_end'   : seg.end_ea - self._base,
+                    'permission': self.__describe_permission(seg.perm),
+                    'selector'  : seg.sel,
                     'type'      : ida_segment.get_segm_class(seg),
-                    'selector'  : seg.sel
                 }
                 
                 segments.append(segm)
