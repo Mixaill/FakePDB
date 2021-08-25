@@ -643,14 +643,18 @@ class DumpInfo():
         result['image_size'] = peheader.data['imagesize']
 
         #debug
-        pedebug = peheader.get_sections_debug()
-        for sec in pedebug:
-            if sec.get_type() != 'codeview':
-                continue
+        result['pdb_age'] = 0
+        result['pdb_guid'] = [0] * 16
 
-            pe_codeview = sec.get_codeview()
-            if pe_codeview is not None:
-                result['pdb_age'] = pe_codeview.data['age']
-                result['pdb_guid'] = list(pe_codeview.data['guid'])
+        peheader_debug = peheader.get_sections_debug()
+        if peheader_debug is not None:
+            for section in peheader_debug:
+                if section.get_type() != 'codeview':
+                    continue
+
+                pe_codeview = section.get_codeview()
+                if pe_codeview is not None:
+                    result['pdb_age'] = pe_codeview.data['age']
+                    result['pdb_guid'] = list(pe_codeview.data['guid'])
 
         return result
