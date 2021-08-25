@@ -17,6 +17,7 @@
 from __future__ import print_function
 
 import json
+import struct
 import sys
 
 import ida_bytes
@@ -26,9 +27,271 @@ import ida_ida
 import ida_idaapi
 import ida_nalt
 import ida_name
-import ida_pro
+import ida_netnode
 import ida_segment
 import ida_typeinf
+
+#
+# PE
+#
+
+class PE_Struct(object):
+
+    def __init__(self, packinfo, data):
+        (format, names) = PE_Struct.parse(packinfo)
+        self.data = self.__unpack(data, format, names)
+
+    def __unpack(self, array, format, names):
+        unpack_list = {}
+
+        unpack_tuple = struct.unpack(format, array[0:struct.calcsize(format)])
+        for pair in zip(names, unpack_tuple):
+            unpack_list[pair[0]] = pair[1]
+
+        return unpack_list
+
+    def show(self):
+        for k, v in self.data.items(): 
+            if isinstance(v, str):
+                print("{:32} {}".format(k, v))
+            else:
+                print("{:32} {}".format(k, hex(v)))
+        print('')
+
+    def parse(packinfo):
+        unpack_format = ''
+        unpack_names = list()
+
+        for pair in packinfo:
+            unpack_format += pair[0]
+            unpack_names.append(pair[1])
+
+        return (unpack_format, unpack_names)
+
+
+class PE_Header_IDA(PE_Struct):
+    packinfo = [
+        ['i', 'signature'],
+        ['H', 'machine'],
+        ['H', 'nobjs'],
+        ['I', 'datetime'],
+        ['I', 'symtof'],
+        ['I', 'nsyms'],
+        ['H', 'hdrsize'],
+        ['H', 'flags'],
+        ['H', 'magic'],
+        ['B', 'vstamp_major'],
+        ['B', 'vstamp_minor'],
+        ['I', 'tsize'],
+        ['I', 'dsize'],
+        ['I', 'bsize'],
+        ['I', 'entry'],
+        ['I', 'text_start'],
+        ['I', 'data_start'],
+        ['I', 'imagebase32'],
+        ['I', 'objalign'],
+        ['I', 'filealign'],
+        ['H', 'osmajor'],
+        ['H', 'osminor'],
+        ['H', 'imagemajor'],
+        ['H', 'imageminor'],
+        ['H', 'subsysmajor'],
+        ['H', 'subsysminor'],
+        ['I', 'reserved'],
+        ['I', 'imagesize'],
+        ['I', 'allhdrsize'],
+        ['I', 'checksum'],
+        ['H', 'subsys'],
+        ['H', 'dllflags'],
+        ['I', 'stackres'],
+        ['I', 'stackcom'],
+        ['I', 'heapres'],
+        ['I', 'heapcom'],
+        ['I', 'loaderflags'],
+        ['I', 'nrvas'],
+        ['I', 'expdir_rva'],
+        ['I', 'expdir_size'],
+        ['I', 'impdir_rva'],
+        ['I', 'impdir_size'],
+        ['I', 'resdir_rva'],
+        ['I', 'resdir_size'],
+        ['I', 'excdir_rva'],
+        ['I', 'excdir_size'],
+        ['I', 'secdir_rva'],
+        ['I', 'secdir_size'],
+        ['I', 'reltab_rva'],
+        ['I', 'reltab_size'],
+        ['I', 'debdir_rva'],
+        ['I', 'debdir_size'],
+        ['I', 'desstr_rva'],
+        ['I', 'desstr_size'],
+        ['I', 'cputab_rva'],
+        ['I', 'cputab_size'],
+        ['I', 'tlsdir_rva'],
+        ['I', 'tlsdir_size'],
+        ['I', 'loddir_rva'],
+        ['I', 'loddir_size'],
+        ['I', 'bimtab_rva'],
+        ['I', 'bimtab_size'],
+        ['I', 'iat_rva'],
+        ['I', 'iat_size'],
+        ['I', 'didtab_rva'],
+        ['I', 'didtab_size'],
+        ['I', 'comhdr_rva'],
+        ['I', 'comhdr_size'],
+        ['I', 'x00tab_rva'],
+        ['I', 'x00tab_size'],
+    ]
+
+    def __init__(self):
+        node = ida_netnode.netnode()
+        node.create("$ PE header")
+        
+        super().__init__(PE_Header_IDA.packinfo, node.valobj())
+
+        self.__describe_pe_signature()
+        self.__describe_pe_magic()
+
+    def get_imagebase(self):
+        if self.data['signature'] == 'pe32+':
+            return self.data['imagebase64']
+        
+        return self.data['imagebase32']
+
+    def get_sections_debug(self):
+        sec_rva = self.data['debdir_rva']
+        sec_len = self.data['debdir_size']
+
+        if sec_rva == 0 or sec_len == 0:
+            return None
+
+        sec_size = PE_Directory_Debug.get_section_size()
+        sec_count = sec_len // sec_size
+
+        result = list()
+        for i in range(0, sec_count):
+            result.append(PE_Directory_Debug(self.get_imagebase(), sec_rva + i*sec_size, sec_size))
+        
+        return result
+        
+
+    def __describe_pe_signature(self):
+        val = self.data['signature']
+        if val == 0x4550:
+            val = 'pe'
+        if val == 0x455042:
+            val = 'bpe'
+        if val == 0x4C50:
+            val = 'pl'  
+        if val == 0x4C50:
+            val = 'vz'
+
+        self.data['signature'] = val
+
+    def __describe_pe_magic(self):
+        val = self.data['magic']
+        if val == 0x107:
+            val = 'rom'
+        if val == 0x10B:
+            val = 'pe32'
+        if val == '0x20B':
+            val = 'pe32+'
+
+        self.data['magic'] = val
+
+
+class PE_Directory_Debug(PE_Struct):
+    packinfo = [
+        ['I', 'characteristics'],
+        ['I', 'time_date_stamp'],
+        ['H', 'major_version'],
+        ['H', 'minor_version'],
+        ['I', 'type'],
+        ['I', 'size_of_data'],
+        ['I', 'address_of_raw_data'],
+        ['I', 'pointer_to_raw_data']
+    ]
+
+    def __init__(self, base, rva, size):
+        self.__base = base
+        super().__init__(PE_Directory_Debug.packinfo, ida_bytes.get_bytes(self.__base+rva, size))
+
+        self.__describe_type()
+
+    def __describe_type(self):
+        val = self.data['type']
+
+        if val == 0:
+            val = 'unknown'
+        elif val == 1:
+            val = 'coff'
+        elif val == 2:
+            val = 'codeview'
+        elif val == 3:
+            val = 'fpo'
+        elif val == 4:
+            val = 'misc'
+        elif val == 5:
+            val = 'exception'
+        elif val == 6:
+            val = 'fixup'
+        elif val == 7:
+            val = 'omap_to_src'
+        elif val == 8:
+            val = 'omap_from_src'
+        elif val == 9:
+            val = 'borland'
+        elif val == 10:
+            val = 'reserved'
+        elif val == 11:
+            val = 'clsid'
+        elif val == 12:
+            val = 'vc_feature'
+        elif val == 13:
+            val = 'pogo'
+        elif val == 14:
+            val = 'iltcg'
+        elif val == 15:
+            val = 'mpx'
+        elif val == 16:
+            val = 'repro'
+        elif val == 17:
+            val = 'ex_dllcharacteristics'
+
+        self.data['type'] = val
+
+    def get_section_size():
+        return struct.calcsize(PE_Struct.parse(PE_Directory_Debug.packinfo)[0])
+
+    def get_type(self):
+        return self.data['type']
+
+    def get_codeview(self):
+        if self.get_type() != 'codeview':
+            return None
+        
+        return PE_Directory_Debug_CodeView(self.__base, self.data['address_of_raw_data'], self.data['size_of_data'])
+
+
+class PE_Directory_Debug_CodeView(PE_Struct):
+    packinfo = [
+        ['I', 'magic'],
+        ['16s', 'guid'],
+        ['I', 'age'],
+    ]
+
+    def __init__(self, base, rva, size):
+        self.__base = base
+        super().__init__(PE_Directory_Debug_CodeView.packinfo, ida_bytes.get_bytes(self.__base + rva, size))
+
+    def get_section_size():
+        return struct.calcsize(PE_Struct.parse(PE_Directory_Debug_CodeView.packinfo)[0])
+
+
+
+#
+# DumpInfo
+#
 
 class DumpInfo():
     def __init__(self):
@@ -43,6 +306,7 @@ class DumpInfo():
 
         output = {
             'general'   : self.__process_general(), 
+            'pe'        : self.__process_pe(),
             'segments'  : self.__process_segments(),
             'exports'   : self.__process_exports(),
             'functions' : self.__process_functions(),
@@ -54,7 +318,7 @@ class DumpInfo():
 
 
     #
-    # private
+    # private/describe
     #
 
     def __describe_alignment(self, align):
@@ -173,6 +437,10 @@ class DumpInfo():
             return 'special'
 
         return None
+
+    #
+    # private/process
+    #
 
     def __process_general(self):
         info_struct = ida_idaapi.get_inf_structure()
@@ -363,3 +631,26 @@ class DumpInfo():
             exports.append(export)
 
         return exports
+
+    def __process_pe(self):
+        result = {}
+
+        peheader = PE_Header_IDA()
+
+        #peheader
+        result['image_datetime'] = peheader.data['datetime']
+        result['image_machine'] = peheader.data['machine']
+        result['image_size'] = peheader.data['imagesize']
+
+        #debug
+        pedebug = peheader.get_sections_debug()
+        for sec in pedebug:
+            if sec.get_type() != 'codeview':
+                continue
+
+            pe_codeview = sec.get_codeview()
+            if pe_codeview is not None:
+                result['pdb_age'] = pe_codeview.data['age']
+                result['pdb_guid'] = list(pe_codeview.data['guid'])
+
+        return result

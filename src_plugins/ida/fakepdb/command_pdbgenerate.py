@@ -39,6 +39,12 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
 
     # Say hello when invoked.
     def activate(self, ctx):
+        # get active filename
+        pe_filename_ext = ida_nalt.get_root_filename()
+        if not pe_filename_ext:
+            print('FakePDB/generate lib: file not loaded')
+            return 1
+
         ida_auto.set_ida_state(ida_auto.st_Work)
         if self.with_labels:
             print('FakePDB/generate pdb (with function labels):')
@@ -50,7 +56,6 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
 
         #calculate locations
         idb_dir = os.path.dirname(ida_loader.get_path(ida_loader.PATH_TYPE_IDB))
-        pe_filename_ext = ida_nalt.get_root_filename()
         pe_filename, _ = os.path.splitext(ida_nalt.get_root_filename())
 
         filepath_exe  = ida_nalt.get_input_file_path()
@@ -62,7 +67,7 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
         dumper.dump_info(filepath_json)
 
         print('    * generating PDB: %s' % filepath_pdb)
-        native.pdb_generate(filepath_exe, filepath_json, filepath_pdb, self.with_labels)
+        native.pdb_generate(filepath_json, filepath_pdb, self.with_labels)
 
         print('    * symserv EXE id: %s' % native.pe_timestamp(filepath_exe))
         print('    * symserv PDB id: %s' % native.pe_guidage(filepath_exe))

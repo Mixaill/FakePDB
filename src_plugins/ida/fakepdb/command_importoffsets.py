@@ -18,6 +18,7 @@
 import os
 
 import ida_kernwin
+import ida_nalt
 
 from .offsets_importer import OffsetsImporter
 
@@ -31,6 +32,10 @@ class __fakepdb_offsetsimport_actionhandler(ida_kernwin.action_handler_t):
 
     # Say hello when invoked.
     def activate(self, ctx):
+        # get active filename
+        if not ida_nalt.get_root_filename():
+            print('FakePDB/import offsets: file not loaded')
+            return 1
 
         importer = OffsetsImporter()
 

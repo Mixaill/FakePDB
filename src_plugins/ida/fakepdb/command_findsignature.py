@@ -14,8 +14,9 @@
    limitations under the License.
 """
 
-import ida_name
 import ida_kernwin
+import ida_nalt
+import ida_name
 
 from .signature_finder import SignatureFinder
 
@@ -29,6 +30,10 @@ class __fakepdb_findsig_actionhandler(ida_kernwin.action_handler_t):
 
     # Say hello when invoked.
     def activate(self, ctx):
+        # get active filename
+        if not ida_nalt.get_root_filename():
+            print('FakePDB/import offsets: file not loaded')
+            return 1
 
         screen_ea = ida_kernwin.get_screen_ea()
 

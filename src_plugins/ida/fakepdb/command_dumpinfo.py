@@ -29,10 +29,15 @@ class __fakepdb_dumpinfo_actionhandler(ida_kernwin.action_handler_t):
 
     # Say hello when invoked.
     def activate(self, ctx):
+        # get active filename
+        pe_filename_ext = ida_nalt.get_root_filename()
+        if not pe_filename_ext:
+            print('FakePDB/dumpinfo: file not loaded')
+            return 1
 
         #calculate locations
         idb_dir = os.path.dirname(ida_loader.get_path(ida_loader.PATH_TYPE_IDB))
-        pe_filename_ext = ida_nalt.get_root_filename()
+
         filepath_json = os.path.join(idb_dir, pe_filename_ext + ".json")
 
         dumper = DumpInfo()

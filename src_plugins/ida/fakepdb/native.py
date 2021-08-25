@@ -16,46 +16,52 @@
 
 import os.path
 import platform
-import sys
 import subprocess
 
 class Native:
 
-    EXECUTABLE_NAME_WIN = "fakepdb.exe"
-    EXECUTABLE_NAME_LIN = "fakepdb"
+    EXECUTABLE_NAME_COFF = "fakepdb_coff"
+    EXECUTABLE_NAME_PDB  = "fakepdb_pdb"
+    EXECUTABLE_NAME_PE   = "fakepdb_pe"
 
     def __init__(self):
         self.__executable_system = platform.system().lower()
         self.__executable_arch   = platform.machine().lower() 
-        self.__executable_path   = ''
-        self.__executable_name   = ''
-
-        if self.__executable_system == 'windows':
-            self.__executable_name = Native.EXECUTABLE_NAME_WIN
-        if self.__executable_system == 'linux':
-            self.__executable_name = Native.EXECUTABLE_NAME_LIN
-
-        self.__executable_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '%s_%s' % (self.__executable_system, self.__executable_arch), self.__executable_name)
 
 
+    #
+    # Commands
+    #
     def coff_createlib(self, path_json, path_lib):
-        return self.__run_command(['coff_createlib', path_json, path_lib])
+        return self.__run_command(Native.EXECUTABLE_NAME_COFF, ['coff_createlib', path_json, path_lib])
 
-
-    def pdb_generate(self, path_exe, path_json, path_pdb, with_labels):
+    def pdb_generate(self, path_json, path_pdb, with_labels):
         cmd = ['pdb_generate']
         if with_labels:
             cmd += ['-l']
-        cmd += [path_exe, path_json, path_pdb]
-        return self.__run_command(cmd)
+        cmd += [path_json, path_pdb]
+        return self.__run_command(Native.EXECUTABLE_NAME_PDB, cmd)
 
     def pe_timestamp(self, path_exe):
-        return self.__run_command(['pe_timestamp', path_exe])
+        return self.__run_command(Native.EXECUTABLE_NAME_PE, ['pe_timestamp', path_exe])
 
     def pe_guidage(self, path_exe):
-        return self.__run_command(['pe_guidage', path_exe])
+        return self.__run_command(Native.EXECUTABLE_NAME_PE, ['pe_guidage', path_exe])
 
-    def __run_command(self, args):
-        p = subprocess.Popen([self.__executable_path] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+    #
+    # Internals 
+    #
+
+    def __run_command(self, exe, args):
+        p = subprocess.Popen([self.__executable_path(exe)] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, _ = p.communicate()
         return stdout
+
+    def __executable_path(self, name):
+        if self.__executable_system == 'windows':
+            name += ".exe"
+
+        return os.path.join(os.path.dirname(os.path.realpath(__file__)), '%s_%s' % (self.__executable_system, self.__executable_arch), name)
+

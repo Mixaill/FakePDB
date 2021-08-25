@@ -38,6 +38,12 @@ class __fakepdb_libgeneration_actionhandler(ida_kernwin.action_handler_t):
 
     # Say hello when invoked.
     def activate(self, ctx):
+        # get active filename
+        pe_filename_ext = ida_nalt.get_root_filename()
+        if not pe_filename_ext:
+            print('FakePDB/generate lib: file not loaded')
+            return 1
+
         ida_auto.set_ida_state(ida_auto.st_Work)
         print('FakePDB/generate lib:')
 
@@ -46,7 +52,7 @@ class __fakepdb_libgeneration_actionhandler(ida_kernwin.action_handler_t):
 
         #calculate locations
         idb_dir = os.path.dirname(ida_loader.get_path(ida_loader.PATH_TYPE_IDB))
-        pe_filename_ext = ida_nalt.get_root_filename()
+        
         pe_filename, _ = os.path.splitext(ida_nalt.get_root_filename())
 
         filepath_exe  = ida_nalt.get_input_file_path()
