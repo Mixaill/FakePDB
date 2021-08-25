@@ -43,55 +43,124 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 endif()
 
+
+
 #
-# fakepdb executable
+# LLVM
+#
+llvm_map_components_to_libnames(llvm_libs core support DebugInfoPDB)
+
+#
+# fakepdb_common
 #
 
-add_executable(fakepdb)
-target_sources(fakepdb PRIVATE
-    src/main.cpp
+add_library(fakepdb_common STATIC)
 
-    include/coff/lib_creator.h
-    src/coff/lib_creator.cpp
+target_sources(fakepdb_common PRIVATE
+        src_common/commands/command_executor.cpp
+        src_common/commands/command_executor.h
+        src_common/commands/command_interface.h
 
-    include/commands/command_coff_createlib.h
-    include/commands/command_interface.h
-    include/commands/command_pdb_generate.h
-    include/commands/command_pe_exports.h
-    include/commands/command_pe_guidage.h
-    include/commands/command_pe_timestamp.h
+        src_common/data/db.cpp
+        src_common/data/db.h
+        src_common/data/export.h
+        src_common/data/function.h
+        src_common/data/general.h
+        src_common/data/label.h
+        src_common/data/name.h
+        src_common/data/pe.h
+        src_common/data/root.h
+        src_common/data/segment.cpp
+        src_common/data/segment.h
 
-    include/common/guid.h
-    include/common/hex.h
+        src_common/nlohmann/json.hpp
 
-    include/data/db.h
-    include/data/export.h
-    include/data/function.h
-    include/data/general.h
-    include/data/label.h
-    include/data/name.h
-    include/data/root.h
-    include/data/segment.h
-    src/data/db.cpp
-    src/data/segment.cpp
-
-    include/pdb/pdb_creator.h
-    include/pdb/pdb_symfactory.h
-    src/pdb/pdb_creator.cpp
-    src/pdb/pdb_symfactory.cpp
-
-    include/pe/pe_file.h
-    src/pe/pe_file.cpp
+        src_common/types/guid.cpp
+        src_common/types/guid.h
+        src_common/types/hex.h
 )
 
-target_include_directories(fakepdb PUBLIC ${LLVM_INCLUDE_DIRS})
-target_include_directories(fakepdb PUBLIC "include")
-target_include_directories(fakepdb PUBLIC ".")
+target_compile_definitions(fakepdb_common PUBLIC JSON_DIAGNOSTICS=1)
 
-llvm_map_components_to_libnames(llvm_libs core support DebugInfoPDB)
-target_link_libraries(fakepdb ${llvm_libs})
+target_include_directories(fakepdb_common PUBLIC src_common)
+target_include_directories(fakepdb_common PUBLIC ${LLVM_INCLUDE_DIRS})
+
+target_link_libraries(fakepdb_common PUBLIC ${llvm_libs})
+
+
+
+#
+# fakepdb_coff
+#
+
+add_executable(fakepdb_coff)
+
+target_sources(fakepdb_coff PRIVATE
+        src_coff/coff/lib_creator.cpp
+        src_coff/coff/lib_creator.h
+        src_coff/commands/command_coff_createlib.h
+
+        src_coff/main.cpp
+        )
+
+target_include_directories(fakepdb_coff PRIVATE src_coff)
+target_link_libraries(fakepdb_coff PRIVATE fakepdb_common)
 
 install(
-    TARGETS fakepdb
+        TARGETS fakepdb_coff
+        RUNTIME DESTINATION bin
+)
+
+
+
+#
+# fakepdb_pdb
+#
+
+add_executable(fakepdb_pdb)
+
+target_sources(fakepdb_pdb PRIVATE
+        src_pdb/commands/command_pdb_generate.h
+
+        src_pdb/pdb/pdb_creator.cpp
+        src_pdb/pdb/pdb_creator.h
+        src_pdb/pdb/pdb_symfactory.cpp
+        src_pdb/pdb/pdb_symfactory.h
+
+        src_pdb/main.cpp
+)
+
+target_include_directories(fakepdb_pdb PRIVATE src_pdb)
+target_link_libraries(fakepdb_pdb PRIVATE fakepdb_common)
+
+install(
+        TARGETS fakepdb_pdb
+        RUNTIME DESTINATION bin
+)
+
+
+
+#
+# fakepdb_pe
+#
+
+add_executable(fakepdb_pe)
+
+target_sources(fakepdb_pe PRIVATE
+        src_pe/commands/command_pe_exports.h
+        src_pe/commands/command_pe_guidage.h
+        src_pe/commands/command_pe_timestamp.h
+
+        src_pe/pe/pe_file.cpp
+        src_pe/pe/pe_file.h
+
+        src_pe/main.cpp
+        )
+
+target_include_directories(fakepdb_pe PRIVATE src_pe)
+target_link_libraries(fakepdb_pe PRIVATE fakepdb_common)
+
+install(
+    TARGETS fakepdb_pe
     RUNTIME DESTINATION bin
 )
