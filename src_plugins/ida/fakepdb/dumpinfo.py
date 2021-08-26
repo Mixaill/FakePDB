@@ -498,9 +498,8 @@ class DumpInfo():
 
         #calling convention
         info['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
-        func_type_data.rettype
         
-        #return tpye
+        #return type
         info['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
 
         #arguments
@@ -559,14 +558,16 @@ class DumpInfo():
             
             func_flags = ida_bytes.get_full_flags(start_ea)
             func_name = ida_funcs.get_func_name(start_ea)
+            func_name_demangled = ida_name.get_demangled_name(start_ea, 0xFFFF, 0, 0)
             func_autonamed = func_flags & ida_bytes.FF_LABL != 0
             func_public = ida_name.is_public_name(start_ea)
 
             function = {
-                'start_rva'    : start_ea - self._base,
-                'name'         : func_name,
-                'is_public'    : func_public,
-                'is_autonamed' : func_autonamed
+                'start_rva'     : start_ea - self._base,
+                'name'          : func_name,
+                'name_demangled': func_name_demangled,
+                'is_public'     : func_public,
+                'is_autonamed'  : func_autonamed
             }
 
             # PE32/PE32+ only support binaries up to 2GB
