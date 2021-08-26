@@ -401,42 +401,73 @@ class DumpInfo():
         
         return None
 
-    def __describe_callingconvention(self, cc):
+    def __describe_callingconvention(self, cm_cc):
         #https://www.hex-rays.com/products/ida/support/sdkdoc/group___c_m___c_c__.html
-        if cc == 0x00:
+        cc = cm_cc & ida_typeinf.CM_CC_MASK
+        if cc == ida_typeinf.CM_CC_INVALID:
             return 'invalid'
-        elif cc == 0x10:
+        elif cc == ida_typeinf.CM_CC_UNKNOWN:
             return 'unknown'
-        elif cc == 0x20:
+        elif cc == ida_typeinf.CM_CC_VOIDARG:
             return 'voidarg'
-        elif cc == 0x30:
+        elif cc == ida_typeinf.CM_CC_CDECL:
             return 'cdecl'
-        elif cc == 0x40:
+        elif cc == ida_typeinf.CM_CC_ELLIPSIS:
             return 'cdecl_ellipsis'
-        elif cc == 0x50:
+        elif cc == ida_typeinf.CM_CC_STDCALL:
             return 'stdcall'
-        elif cc == 0x60:
+        elif cc == ida_typeinf.CM_CC_PASCAL:
             return 'pascal'
-        elif cc == 0x70:
+        elif cc == ida_typeinf.CM_CC_FASTCALL:
             return 'fastcall'
-        elif cc == 0x80:
+        elif cc == ida_typeinf.CM_CC_THISCALL:
             return 'thiscall'
-        elif cc == 0x90:
+        elif cc == ida_typeinf.CM_CC_MANUAL:
             return 'manual'
-        elif cc == 0xA0:
+        elif cc == ida_typeinf.CM_CC_SPOILED:
             return 'spoiled'
         elif cc == 0xB0:
             return 'reserved'
-        elif cc == 0xC0:
+        elif cc == ida_typeinf.CM_CC_RESERVE3:
             return 'reserved'
-        elif cc == 0xD0:
+        elif cc == ida_typeinf.CM_CC_SPECIALE:
             return 'special_ellipsis'
-        elif cc == 0xE0:
+        elif cc == ida_typeinf.CM_CC_SPECIALP:
             return 'special_pstack'
-        elif cc == 0xF0:
+        elif cc == ida_typeinf.CM_CC_SPECIAL:
             return 'special'
 
-        return None
+        return 'unknown_%s' % cc
+
+    def __describe_memorymodel_code(self, cm_cc):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group___c_m___m__.html
+        cm = cm_cc & ida_typeinf.CM_M_MASK
+        
+        if cm == ida_typeinf.CM_M_NN:
+            return 'near'
+        elif cm == ida_typeinf.CM_M_FF:
+            return 'far'
+        elif cm == ida_typeinf.CM_M_NF:
+            return 'near'
+        elif cm == ida_typeinf.CM_M_FN:
+            return 'far'
+        
+        return 'unknown_%s' % cm_cc
+
+    def __describe_memorymodel_data(self, cm_cc):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group___c_m___m__.html
+        cm = cm_cc & ida_typeinf.CM_M_MASK
+        
+        if cm == ida_typeinf.CM_M_NN:
+            return 'near'
+        elif cm == ida_typeinf.CM_M_FF:
+            return 'far'
+        elif cm == ida_typeinf.CM_M_NF:
+            return 'far'
+        elif cm == ida_typeinf.CM_M_FN:
+            return 'near'
+        
+        return 'unknown_%s' % cm_cc
 
     #
     # private/process
@@ -498,7 +529,9 @@ class DumpInfo():
 
         #calling convention
         info['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
-        
+        info['memory_model_code']  = self.__describe_memorymodel_code(func_type_data.cc)
+        info['memory_model_data']  = self.__describe_memorymodel_data(func_type_data.cc)
+
         #return type
         info['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
 
