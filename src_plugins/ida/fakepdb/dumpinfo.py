@@ -626,10 +626,11 @@ class DumpInfo():
                 continue
 
             name = {
-                'rva'       : ea - self._base,
-                'name'      : ida_name.get_nlist_name(i),
-                'is_public' : ida_name.is_public_name(ea),
-                'is_func'   : ida_funcs.get_func(ea) is not None
+                'rva'            : ea - self._base,
+                'name'           : ida_name.get_nlist_name(i),
+                'name_demangled' : ida_name.get_demangled_name(ea, 0xFFFF, 0, 0),
+                'is_public'      : ida_name.is_public_name(ea),
+                'is_func'        : ida_funcs.get_func(ea) is not None
             }
 
             # PE32/PE32+ only support binaries up to 2GB
