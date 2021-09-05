@@ -30,7 +30,10 @@ import ida_name
 import ida_netnode
 import ida_segment
 import ida_typeinf
-
+import idautils
+import idc
+import ida_struct
+import ida_idp
 #
 # PE
 #
@@ -293,6 +296,16 @@ class PE_Directory_Debug_CodeView(PE_Struct):
 # DumpInfo
 #
 
+def get_cbsize():
+    """
+    Returns the size of the addressable codebyte for the processor.
+    
+    Returns:
+        Integer representing the number of 8-bit bytes in an
+        addressable codebyte.
+    """
+    return (ida_idp.ph_get_cnbits() + 7) / 8
+
 class DumpInfo():
     def __init__(self):
         pass
@@ -310,13 +323,14 @@ class DumpInfo():
             'segments'  : self.__process_segments(),
             'exports'   : self.__process_exports(),
             'functions' : self.__process_functions(),
-            'names'     : self.__process_names()
+            'names'     : self.__process_names(),
+            'structs'   : self.__process_structs()
         }
 
         with open(filepath, "w") as f:
             json.dump(output, f, indent=4)
 
-
+  
     #
     # private/describe
     #
@@ -693,3 +707,37 @@ class DumpInfo():
                     result['pdb_guid'] = list(pe_codeview.data['guid'])
 
         return result
+
+    def __process_struct_members(self, st):
+        def describe_member_type(mem):
+            tinfo = ida_typeinf.tinfo_t()
+            ida_struct.get_member_tinfo(tinfo, mem)
+            return ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, tinfo, '', '')
+
+        members = []
+
+        for i in range(st.memqty):
+            mem = st.get_member(i)
+
+            members.append({
+                'offset' : 0 if st.is_union() else mem.soff,
+                'type'   : describe_member_type(mem),
+                'name'   : ida_struct.get_member_name(mem.id) or None
+            })
+        
+        return members
+
+    def __process_structs(self):
+        structs = []
+
+        for idx, sid, sname in idautils.Structs():
+            st = ida_struct.get_struc(sid)
+            structs.append({
+                'type'            : 'union' if st.is_union() else 'struct',
+                'name'            : sname,
+                'size'            : int(ida_struct.get_struc_size(st)), #idc.get_struc_size(sid) * cbsize,
+                'variable_length' : st.is_varstr(),
+                'members'         : self.__process_struct_members(st)
+            })
+
+        return structs
