@@ -296,16 +296,6 @@ class PE_Directory_Debug_CodeView(PE_Struct):
 # DumpInfo
 #
 
-def get_cbsize():
-    """
-    Returns the size of the addressable codebyte for the processor.
-    
-    Returns:
-        Integer representing the number of 8-bit bytes in an
-        addressable codebyte.
-    """
-    return (ida_idp.ph_get_cnbits() + 7) / 8
-
 class DumpInfo():
     def __init__(self):
         pass
@@ -735,7 +725,7 @@ class DumpInfo():
             structs.append({
                 'type'            : 'union' if st.is_union() else 'struct',
                 'name'            : sname,
-                'size'            : int(ida_struct.get_struc_size(st)), #idc.get_struc_size(sid) * cbsize,
+                'size'            : int(ida_struct.get_struc_size(st)), 
                 'variable_length' : st.is_varstr(),
                 'members'         : self.__process_struct_members(st)
             })
