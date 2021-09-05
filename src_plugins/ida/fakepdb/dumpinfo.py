@@ -675,6 +675,7 @@ class DumpInfo():
         result['image_datetime'] = peheader.data['datetime']
         result['image_machine'] = peheader.data['machine']
         result['image_size'] = peheader.data['imagesize']
+        result['image_base'] = peheader.get_imagebase()
 
         #debug
         result['pdb_age'] = 0
