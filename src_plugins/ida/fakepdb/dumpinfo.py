@@ -29,7 +29,9 @@ import ida_nalt
 import ida_name
 import ida_netnode
 import ida_segment
+import ida_struct
 import ida_typeinf
+
 
 #
 # PE
@@ -310,13 +312,14 @@ class DumpInfo():
             'segments'  : self.__process_segments(),
             'exports'   : self.__process_exports(),
             'functions' : self.__process_functions(),
-            'names'     : self.__process_names()
+            'names'     : self.__process_names(),
+            'structs'   : self.__process_structs()
         }
 
         with open(filepath, "w") as f:
             json.dump(output, f, indent=4)
 
-
+  
     #
     # private/describe
     #
@@ -468,6 +471,184 @@ class DumpInfo():
             return 'near'
         
         return 'unknown_%s' % cm_cc
+
+    def __describe_struct_type(self, st_props):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group___s_f__.html
+
+        result = ''
+
+        if st_props & ida_struct.SF_GHOST != 0:
+            result += 'ghost_'
+
+        if st_props & ida_struct.SF_VAR != 0:
+            result += 'variable_'
+
+        if st_props & ida_struct.SF_FRAME != 0:
+            result += 'frame'
+        elif st_props & ida_struct.SF_UNION != 0:
+            result += 'union'
+        else:
+            result += 'struct'
+
+        return result
+
+    def __describe_type_basetype(self, type):
+        #https://hex-rays.com/products/ida/support/sdkdoc/group__tf.html
+
+        type_base = type & ida_typeinf.TYPE_BASE_MASK
+        type_flags = type & ida_typeinf.TYPE_FLAGS_MASK
+        type_modif = type & ida_typeinf.TYPE_MODIF_MASK
+
+        if type_base == ida_typeinf.BT_UNK:
+            if type_flags == ida_typeinf.BTMT_SIZE12:
+                return 'void_16'
+            if type_flags == ida_typeinf.BTMT_SIZE48:
+                return 'void_64'   
+            if type_flags == ida_typeinf.BTMT_SIZE128:
+                return 'void_unknown'   
+              
+            return 'void'
+        
+        elif type_base == ida_typeinf.BT_VOID:
+            if type_flags == ida_typeinf.BTMT_SIZE12:
+                return 'void_8'
+            if type_flags == ida_typeinf.BTMT_SIZE48:
+                return 'void_32'   
+            if type_flags == ida_typeinf.BTMT_SIZE128:
+                return 'void_128'   
+            
+            return 'void'
+
+        elif type_base == ida_typeinf.BT_INT8:
+            if type_flags == ida_typeinf.BTMT_CHAR:
+                return 'char'
+            elif type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_8'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_8'
+            
+            return 'int_8'
+
+        elif type_base == ida_typeinf.BT_INT16:
+            if type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_16'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_16'
+            
+            return 'int_16'
+
+        elif type_base == ida_typeinf.BT_INT32:
+            if type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_32'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_32'
+            
+            return 'int_32'
+
+        elif type_base == ida_typeinf.BT_INT64:
+            if type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_64'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_64'
+            
+            return 'int_64'
+
+        elif type_base == ida_typeinf.BT_INT128:
+            if type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_128'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_128'
+            
+            return 'int_128'
+
+        elif type_base == ida_typeinf.BT_INT:
+            if type_flags == ida_typeinf.BTMT_CHAR:
+                return 'seg_register'
+            elif type_flags == ida_typeinf.BTMT_UNSIGNED:
+                return 'uint_native'
+            elif type_flags == ida_typeinf.BTMT_SIGNED:
+                return 'sint_native'
+            
+            return 'int_native'
+
+        elif type_base == ida_typeinf.BT_BOOL:
+            if type_flags == ida_typeinf.BTMT_BOOL1:
+                return 'bool_8'
+            elif type_flags == ida_typeinf.BTMT_BOOL2:
+                return 'bool_16'
+            elif type_flags == ida_typeinf.BTMT_BOOL4:
+                return 'bool_32'
+            elif type_flags == ida_typeinf.BTMT_BOOL8:
+                return 'bool_64'
+
+            return 'bool'
+
+        elif type_base == ida_typeinf.BT_FLOAT:
+            if type_flags == ida_typeinf.BTMT_FLOAT:
+                return 'float_32'
+            elif type_flags == ida_typeinf.BTMT_DOUBLE:
+                return 'float_64'
+            elif type_flags == ida_typeinf.BTMT_LNGDBL:
+                return 'float_longdbl'
+            elif type_flags == ida_typeinf.BTMT_SPECFLT:
+                return 'float_varsize'
+
+            return 'float'
+
+        if type_base == ida_typeinf.BT_PTR:
+            if type_flags == ida_typeinf.BTMT_NEAR:
+                return 'ptr_near'
+            elif type_flags == ida_typeinf.BTMT_FAR:
+                return 'ptr_far'
+            elif type_flags == ida_typeinf.BTMT_CLOSURE:
+                return 'ptr_closure'
+
+            return 'ptr'
+
+        if type_base == ida_typeinf.BT_ARRAY:
+            if type_flags == ida_typeinf.BTMT_NONBASED:
+                return 'array_nonbased'
+            elif type_flags == ida_typeinf.BTMT_ARRESERV:
+                return 'array_reserved'
+
+            return 'array'
+
+
+        if type_base == ida_typeinf.BT_FUNC:
+            if type_flags == ida_typeinf.BTMT_NEARCALL:
+                return 'func_near'
+            elif type_flags == ida_typeinf.BTMT_FARCALL:
+                return 'func_far'
+            elif type_flags == ida_typeinf.BTMT_INTCALL:
+                return 'func_int'
+
+            return 'func'
+
+        if type_base == ida_typeinf.BT_COMPLEX:
+            if type_flags == ida_typeinf.BTMT_STRUCT:
+                return 'struct'
+            elif type_flags == ida_typeinf.BTMT_UNION:
+                return 'union'
+            elif type_flags == ida_typeinf.BTMT_ENUM:
+                return 'enum'
+            elif type_flags == ida_typeinf.BTMT_TYPEDEF:
+                return 'typedef'
+
+            return 'complex'    
+
+        if type_base == ida_typeinf.BT_BITFIELD:
+            if type_flags == ida_typeinf.BTMT_BFLDI8:
+                return 'bitfield_8'
+            elif type_flags == ida_typeinf.BTMT_BFLDI16:
+                return 'bitfield_16'
+            elif type_flags == ida_typeinf.BTMT_BFLDI32:
+                return 'bitfield_32'
+            elif type_flags == ida_typeinf.BTMT_BFLDI64:
+                return 'bitfield_64'
+
+            return 'bitfield'    
+
+        return 'unknown_%s_%s_%s' % (hex(type_base), hex(type_flags), hex(type_modif))
 
     #
     # private/process
@@ -693,3 +874,50 @@ class DumpInfo():
                     result['pdb_guid'] = list(pe_codeview.data['guid'])
 
         return result
+
+    def __process_struct_members(self, st_obj):
+        
+        members = []
+        for st_member in st_obj.members:
+            mem_name = ida_struct.get_member_name(st_member.id) or ('unknown_%s' % st_member.id)
+            
+            mem_off_start = 0 if st_obj.is_union() else st_member.soff
+            mem_off_end   = st_member.eoff
+
+            mem_tinfo = ida_typeinf.tinfo_t()
+            ida_struct.get_member_tinfo(mem_tinfo, st_member)
+            
+            mem_typename = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, mem_tinfo, '', '')
+            if not mem_typename:
+                mem_typename = self.__describe_type_basetype(mem_tinfo.get_realtype())
+
+            members.append({
+                'offset' : mem_off_start,
+                'length' : mem_off_end - mem_off_start,
+                'type'   : mem_typename,
+                'name'   : mem_name,
+            })
+        
+        return members
+
+    def __process_structs(self):
+        structs = []
+
+        st_idx  = ida_struct.get_first_struc_idx()
+        while st_idx != ida_idaapi.BADADDR:
+
+            st_id = ida_struct.get_struc_by_idx(st_idx)
+            st_obj = ida_struct.get_struc(st_id)
+
+            st_name = ida_struct.get_struc_name(st_id)
+                    
+            structs.append({
+                'type'            : self.__describe_struct_type(st_obj.props),
+                'name'            : st_name,
+                'size'            : int(ida_struct.get_struc_size(st_obj)), 
+                'members'         : self.__process_struct_members(st_obj)
+            })
+
+            st_idx = ida_struct.get_next_struc_idx(st_idx)
+           
+        return structs
