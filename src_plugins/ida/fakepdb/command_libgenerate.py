@@ -76,8 +76,8 @@ class __fakepdb_libgeneration_actionhandler(ida_kernwin.action_handler_t):
     
 def register_actions():
     action_desc = ida_kernwin.action_desc_t(
-        'fakepdb_lib_generation',         # The action name. This acts like an ID and must be unique
-        'Generate .LIB file (with function labels)', # The action text.
+        'fakepdb_lib_generation',                # The action name. This acts like an ID and must be unique
+        'Generate .LIB file',                    # The action text.
         __fakepdb_libgeneration_actionhandler(), # The action handler.
         'Ctrl+Shift+6',                          # Optional: the action shortcut
         '',                                      # Optional: the action tooltip (available in menus/toolbar)

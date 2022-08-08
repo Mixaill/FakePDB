@@ -652,6 +652,19 @@ class DumpInfo():
         return 'unknown_%s_%s_%s' % (hex(type_base), hex(type_flags), hex(type_modif))
 
     #
+    # private/get
+    #
+
+    def __get_type_data(self, ea):
+        tinfo = ida_typeinf.tinfo_t()
+        ida_nalt.get_tinfo(tinfo, ea)
+        func_type_data = ida_typeinf.func_type_data_t()
+        tinfo.get_func_details(func_type_data)
+        
+        return func_type_data
+
+
+    #
     # private/process
     #
 
@@ -703,11 +716,7 @@ class DumpInfo():
 
     def __process_function_typeinfo(self, info, func):
 
-        tinfo = ida_typeinf.tinfo_t()
-        ida_nalt.get_tinfo(tinfo,func.start_ea)
-        
-        func_type_data = ida_typeinf.func_type_data_t()
-        tinfo.get_func_details(func_type_data)
+        func_type_data = self.__get_type_data(func.start_ea)
 
         #calling convention
         info['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
@@ -832,6 +841,7 @@ class DumpInfo():
             ea = ida_entry.get_entry(ordinal)
 
             flags = ida_bytes.get_full_flags(ea)
+            type_data = self.__get_type_data(ea)
             type = 'unknown'
             if ida_bytes.is_func(flags):
                 type = 'function'
@@ -839,10 +849,11 @@ class DumpInfo():
                 type = 'data'
 
             export = {
-                'ordinal' : ordinal,
-                'rva'     : ea - self._base,
-                'name'    : ida_entry.get_entry_name(ordinal),
-                'type'    : type
+                'ordinal'           : ordinal,
+                'rva'               : ea - self._base,
+                'name'              : ida_entry.get_entry_name(ordinal),
+                'type'              : type,
+                'calling_convention': self.__describe_callingconvention(type_data.cc)
             }
 
             exports.append(export)
