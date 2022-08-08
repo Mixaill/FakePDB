@@ -74,7 +74,7 @@ function Get-Architecture()
 function Set-BuildEnvironment(){
     if("windows" -eq $(Get-OS)){
         #https://stackoverflow.com/a/64744522
-        Push-Location "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools"
+        Push-Location "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools"
         cmd /c "VsDevCmd.bat -arch=amd64 -host_arch=amd64&set " |
         ForEach-Object {
         if ($_ -match "=") {
@@ -117,7 +117,15 @@ function Sign-Folder($Folder, $Filters = @("*.exe", "*.dll"), $TimestampServer =
 #
 
 function Build-LLVM(){
-    git clone --depth=1 https://github.com/llvm/llvm-project "./~build/llvm_git"
+    if (Test-Path -Path "./~build/llvm_git"){
+        Push-Location "./~build/llvm_git"
+        git reset --hard
+        git pull
+        Pop-Location
+    }
+    else{
+        git clone --depth=1 https://github.com/llvm/llvm-project "./~build/llvm_git"
+    }
 
     cmake "./~build/llvm_git/llvm" `
         -B"./~build/llvm_build" `
