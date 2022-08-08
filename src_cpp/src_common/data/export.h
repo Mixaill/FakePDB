@@ -19,6 +19,8 @@ namespace FakePDB::Data {
          *  - data
          */
         std::string type;
+
+        std::string calling_convention;
     };
 
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Export, ordinal, rva, name)
