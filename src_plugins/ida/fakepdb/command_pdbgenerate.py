@@ -67,7 +67,7 @@ class __fakepdb_pdbgeneration_actionhandler(ida_kernwin.action_handler_t):
         dumper.dump_info(filepath_json)
 
         print('    * generating PDB: %s' % filepath_pdb)
-        native.pdb_generate(filepath_json, filepath_pdb, self.with_labels)
+        native.pdb_generate(filepath_json, filepath_pdb, filepath_exe, self.with_labels)
 
         print('    * symserv EXE id: %s' % native.pe_timestamp(filepath_exe))
         print('    * symserv PDB id: %s' % native.pe_guidage(filepath_exe))

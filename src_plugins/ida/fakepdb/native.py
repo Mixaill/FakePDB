@@ -35,11 +35,11 @@ class Native:
     def coff_createlib(self, path_json, path_lib):
         return self.__run_command(Native.EXECUTABLE_NAME_COFF, ['coff_createlib', path_json, path_lib])
 
-    def pdb_generate(self, path_json, path_pdb, with_labels):
+    def pdb_generate(self, path_json, path_pdb, path_exe, with_labels):
         cmd = ['pdb_generate']
         if with_labels:
             cmd += ['-l']
-        cmd += [path_json, path_pdb]
+        cmd += [path_json, path_pdb, path_exe]
         return self.__run_command(Native.EXECUTABLE_NAME_PDB, cmd)
 
     def pe_timestamp(self, path_exe):
