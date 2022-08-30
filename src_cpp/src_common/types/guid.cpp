@@ -18,3 +18,8 @@ std::string FakePDB::Common::GUID::ToHex(const std::vector<uint8_t> &vec) {
     auto *guid = reinterpret_cast<const GUID *>(vec.data());
     return guid->ToHex();
 }
+
+std::string FakePDB::Common::GUID::ToHex(const llvm::codeview::GUID& vec) {
+    auto* guid = reinterpret_cast<const GUID*>(vec.Guid);
+    return guid->ToHex();
+}

@@ -24,6 +24,7 @@
 
 //LLVM
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/DebugInfo/CodeView/GUID.h>
 #include <llvm/Object/Binary.h>
 #include <llvm/Object/COFF.h>
 
@@ -36,7 +37,7 @@ namespace FakePDB::PE {
     public:
         explicit PeFile(const std::filesystem::path &path);
 
-        [[nodiscard]] std::vector<uint8_t> GetPdbGuid() const;
+        [[nodiscard]] llvm::codeview::GUID GetPdbGuid() const;
 
         [[nodiscard]] uint32_t GetPdbAge() const;
 

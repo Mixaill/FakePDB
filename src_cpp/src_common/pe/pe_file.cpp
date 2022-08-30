@@ -30,20 +30,23 @@ namespace FakePDB::PE {
         }
     }
 
-    std::vector<uint8_t> PeFile::GetPdbGuid() const
+    llvm::codeview::GUID PeFile::GetPdbGuid() const
     {
         const llvm::codeview::DebugInfo* DebugInfo = nullptr;
         llvm::StringRef PDBFileName;
 
         if (!_obj) {
-            return std::vector<uint8_t>(16);
+            return {};
         }
 
         if (_obj->getDebugPDBInfo(DebugInfo, PDBFileName) || !DebugInfo) {
-            return std::vector<uint8_t>(16);
+            return {};
         }
 
-        return std::vector<uint8_t>(&DebugInfo->PDB70.Signature[0], &DebugInfo->PDB70.Signature[16]);
+        llvm::codeview::GUID result{};
+        std::memcpy(result.Guid, DebugInfo->PDB70.Signature, std::size(result.Guid));
+
+        return result;
     }
 
     uint32_t PeFile::GetPdbAge() const

@@ -75,6 +75,9 @@ target_sources(fakepdb_common PRIVATE
 
         src_common/nlohmann/json.hpp
 
+        src_common/pe/pe_file.cpp
+        src_common/pe/pe_file.h
+
         src_common/types/guid.cpp
         src_common/types/guid.h
         src_common/types/hex.h
@@ -150,9 +153,6 @@ target_sources(fakepdb_pe PRIVATE
         src_pe/commands/command_pe_exports.h
         src_pe/commands/command_pe_guidage.h
         src_pe/commands/command_pe_timestamp.h
-
-        src_pe/pe/pe_file.cpp
-        src_pe/pe/pe_file.h
 
         src_pe/main.cpp
         )
