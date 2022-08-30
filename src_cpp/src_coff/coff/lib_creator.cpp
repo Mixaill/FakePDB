@@ -17,17 +17,17 @@ namespace FakePDB::COFF {
             llvm::object::COFFShortExport entry{};
             entry.Ordinal = ex.ordinal;
 
-            // https://docs.microsoft.com/en-us/cpp/build/reference/decorated-names
             entry.Name = ex.name;
-            if (machine_type == llvm::COFF::IMAGE_FILE_MACHINE_I386 && ex.calling_convention != "fastcall" && ex.calling_convention != "vectorcall") {
-                entry.Name = "_" + entry.Name;
-            }
-
             if (ex.type == "data") {
                 entry.Data = true;
             }
-
             exports.push_back(entry);
+
+            // https://docs.microsoft.com/en-us/cpp/build/reference/decorated-names
+            if(machine_type == llvm::COFF::IMAGE_FILE_MACHINE_I386) {
+                entry.Name = "_" + entry.Name;
+                exports.push_back(entry);
+            }
         }
 
         auto err = llvm::object::writeImportLibrary(db.General().filename, path.string(), exports, machine_type, false);
