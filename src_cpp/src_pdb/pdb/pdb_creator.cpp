@@ -32,6 +32,7 @@
 //fakepdb
 #include "pdb_creator.h"
 #include "pdb_symfactory.h"
+#include "pe/pe_file.h"
 
 
 namespace FakePDB::PDB {
@@ -45,7 +46,7 @@ namespace FakePDB::PDB {
     {
     }
 
-    bool PdbCreator::Initialize(Data::DB &ida_db, bool withLabels) {
+    bool PdbCreator::Initialize(Data::DB &ida_db, std::filesystem::path& path_exe, bool withLabels) {
         _withLabels = withLabels;
 
         //initialize builder
@@ -61,22 +62,31 @@ namespace FakePDB::PDB {
         }
 
         // Add an Info stream.
-        auto &InfoBuilder = _pdbBuilder.getInfoBuilder();
+        auto& InfoBuilder = _pdbBuilder.getInfoBuilder();
         InfoBuilder.setVersion(llvm::pdb::PdbRaw_ImplVer::PdbImplVC70);
         InfoBuilder.setHashPDBContentsToGUID(false);
-        InfoBuilder.setAge(ida_db.PE().pdb_age);
 
-        auto guid_d = ida_db.PE().pdb_guid;
-        llvm::codeview::GUID guid{};
-        memcpy(guid.Guid, guid_d.data(), guid_d.size());
-        InfoBuilder.setGuid(guid);
+        // set GUID and Aage
+        if (std::filesystem::exists(path_exe)) {
+            PE::PeFile pe_file(path_exe);
+            InfoBuilder.setGuid(pe_file.GetPdbGuid());
+            InfoBuilder.setAge(pe_file.GetPdbAge());
+        }
+        else {
+            llvm::codeview::GUID guid{};
+            auto guid_d = ida_db.PE().pdb_guid;
+            memcpy(guid.Guid, guid_d.data(), guid_d.size());
+
+            InfoBuilder.setGuid(guid);
+            InfoBuilder.setAge(ida_db.PE().pdb_age);
+        }
 
         //Add an empty DBI stream.
-        auto &DbiBuilder = _pdbBuilder.getDbiBuilder();
-        DbiBuilder.setAge(InfoBuilder.getAge());
+        auto& DbiBuilder = _pdbBuilder.getDbiBuilder();
         DbiBuilder.setVersionHeader(llvm::pdb::PdbDbiV70);
         DbiBuilder.setMachineType(static_cast<llvm::pdb::PDB_Machine>(ida_db.PE().image_machine));
         DbiBuilder.setFlags(llvm::pdb::DbiFlags::FlagHasCTypesMask);
+        DbiBuilder.setAge(InfoBuilder.getAge());
 
         // Technically we are not link.exe 14.11, but there are known cases where
         // debugging tools on Windows expect Microsoft-specific version numbers or

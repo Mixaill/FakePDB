@@ -29,7 +29,7 @@ namespace FakePDB::PDB {
 
         PdbCreator();
 
-        bool Initialize(Data::DB &ida_db, bool withLabels);
+        bool Initialize(Data::DB &ida_db, std::filesystem::path& path_exe, bool withLabels);
 
         void AddNatvisFile(std::filesystem::path &path);
 

@@ -23,7 +23,7 @@ namespace FakePDB::Commands {
         };
 
         int32_t GetArgsMax() override {
-            return 3;
+            return 4;
         };
 
         std::string GetCommandName() override {
@@ -48,6 +48,11 @@ namespace FakePDB::Commands {
             std::filesystem::path path_json = argv[arg_json];
             std::filesystem::path path_out  = argv[arg_json+1];
 
+            std::filesystem::path path_exe{};
+            if (arg_json + 2 < argc) {
+                path_exe = argv[arg_json + 2];
+            }
+
             if (!std::filesystem::exists(path_json)) {
                 std::cerr << ".json file does not exists";
                 return 3;
@@ -55,7 +60,7 @@ namespace FakePDB::Commands {
 
             Data::DB ida_db(path_json);
             PDB::PdbCreator creator;
-            creator.Initialize(ida_db, with_labels);
+            creator.Initialize(ida_db, path_exe, with_labels);
 
             std::filesystem::create_directories(path_out.parent_path());
 
