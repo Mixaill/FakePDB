@@ -74,7 +74,7 @@ function Get-Architecture()
 function Set-BuildEnvironment(){
     if("windows" -eq $(Get-OS)){
         #https://stackoverflow.com/a/64744522
-        Push-Location "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools"
+        Push-Location "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools"
         cmd /c "VsDevCmd.bat -arch=amd64 -host_arch=amd64&set " |
         ForEach-Object {
         if ($_ -match "=") {
