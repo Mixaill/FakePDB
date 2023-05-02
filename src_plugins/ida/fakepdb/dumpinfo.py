@@ -816,6 +816,9 @@ class DumpInfo():
             if ida_funcs.get_func(ea) is not None:
                 continue
 
+            if ida_name.get_nlist_name(i) is None:
+                continue
+
             name = {
                 'rva'            : ea - self._base,
                 'name'           : ida_name.get_nlist_name(i),
