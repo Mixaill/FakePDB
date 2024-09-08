@@ -122,7 +122,9 @@ namespace FakePDB::PDB {
     }
 
     bool PdbCreator::Commit(std::filesystem::path &path) {
-        std::filesystem::create_directories(path.parent_path());
+        std::filesystem::path dir = path.parent_path();
+        if (!dir.empty() && !std::filesystem::exists(dir))
+            std::filesystem::create_directories(dir);
         auto guid = _pdbBuilder.getInfoBuilder().getGuid();
         if (_pdbBuilder.commit(path.string(), &guid)) {
             return false;
