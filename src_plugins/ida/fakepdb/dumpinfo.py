@@ -698,11 +698,14 @@ class DumpInfo():
 
         for n in range(0, ida_segment.get_segm_qty()):
             seg = ida_segment.getnseg(n)
+            name = ida_segment.get_segm_name(seg)
+            if name == 'HEADER':
+                continue
             if seg:
                 segm = {
                     'align'     : self.__describe_alignment(seg.align),
                     'bitness'   : self.__describe_bitness(seg.bitness),
-                    'name'      : ida_segment.get_segm_name(seg),
+                    'name'      : name,
                     'rva_start' : seg.start_ea - self._base,
                     'rva_end'   : seg.end_ea - self._base,
                     'permission': self.__describe_permission(seg.perm),
