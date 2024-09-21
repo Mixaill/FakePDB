@@ -62,8 +62,6 @@ namespace FakePDB::Commands {
             PDB::PdbCreator creator;
             creator.Initialize(ida_db, path_exe, with_labels);
 
-            std::filesystem::create_directories(path_out.parent_path());
-
             creator.Commit(path_out);
 
             return 0;
