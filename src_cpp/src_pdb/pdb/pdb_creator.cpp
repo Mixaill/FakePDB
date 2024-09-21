@@ -183,19 +183,19 @@ namespace FakePDB::PDB {
 
     bool PdbCreator::processSections(Data::DB& ida_db) {
         auto &DbiBuilder = _pdbBuilder.getDbiBuilder();
+        _sections.clear();
 
         // Add Section Map stream.
-        std::vector<llvm::object::coff_section> sections;
         for (const auto& segment : ida_db.Segments()) {
-            sections.push_back(segment.toLLVM());
+            _sections.push_back(segment.toLLVM());
         }
 
-        DbiBuilder.createSectionMap(sections);
+        DbiBuilder.createSectionMap(_sections);
 
         // Add COFF section header stream.
         auto sectionsTable = llvm::ArrayRef<uint8_t>(
-            reinterpret_cast<const uint8_t*>(sections.data()),
-            sections.size()*sizeof(llvm::object::coff_section));
+            reinterpret_cast<const uint8_t*>(_sections.data()),
+            _sections.size()*sizeof(llvm::object::coff_section));
         
         if (DbiBuilder.addDbgStream(llvm::pdb::DbgHeaderType::SectionHdr, sectionsTable)) {
             return false;

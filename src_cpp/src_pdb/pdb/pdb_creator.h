@@ -50,5 +50,6 @@ namespace FakePDB::PDB {
 
         llvm::BumpPtrAllocator _allocator;
         llvm::pdb::PDBFileBuilder _pdbBuilder;
+        std::vector<llvm::object::coff_section> _sections;
     };
 }
