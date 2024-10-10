@@ -669,10 +669,10 @@ class DumpInfo():
     #
 
     def __process_general(self):
-        info_struct = ida_idaapi.get_inf_structure()
+        
 
         #architecture
-        arch = info_struct.procname
+        arch = ida_ida.inf_get_procname()
         if arch == 'metapc':
             arch = 'x86'
         elif arch == 'ARM':
@@ -680,9 +680,9 @@ class DumpInfo():
 
         #bitness
         bitness = 16
-        if info_struct.is_64bit():
+        if ida_ida.inf_is_64bit():
             bitness = 64
-        elif info_struct.is_32bit():
+        elif ida_ida.inf_is_32bit_exactly():
             bitness = 32
 
         result = {
@@ -767,8 +767,8 @@ class DumpInfo():
     def __process_functions(self):
         functions = list()
 
-        start = ida_ida.cvar.inf.min_ea
-        end   = ida_ida.cvar.inf.max_ea
+        start = ida_ida.inf_get_min_ea()
+        end   = ida_ida.inf_get_max_ea()
 
         # find first function head chunk in the range
         chunk = ida_funcs.get_fchunk(start)
