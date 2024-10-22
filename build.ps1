@@ -74,7 +74,7 @@ function Get-Architecture()
 function Set-BuildEnvironment(){
     if("windows" -eq $(Get-OS)){
         #https://stackoverflow.com/a/64744522
-        Push-Location "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools"
+        Push-Location "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools"
         cmd /c "VsDevCmd.bat -arch=amd64 -host_arch=amd64&set " |
         ForEach-Object {
         if ($_ -match "=") {
@@ -152,7 +152,7 @@ function Build-LLVM(){
         -DLLVM_INCLUDE_UTILS=OFF `
         -DLLVM_TARGETS_TO_BUILD=""
 
-    cmake --build "./~build/llvm_build"
+    cmake --build "./~build/llvm_build" --parallel
     cmake --install "./~build/llvm_build"
 }
 
@@ -172,7 +172,7 @@ function Build-FakePDB(){
         -DCMAKE_INSTALL_PREFIX="./~build/fakepdb_install" `
         -DCMAKE_PREFIX_PATH="$root/~build/llvm_install"
 
-    cmake --build "./~build/fakepdb_build_ninja"
+    cmake --build "./~build/fakepdb_build_ninja" --parallel
     cmake --install "./~build/fakepdb_build_ninja"
 }
 
