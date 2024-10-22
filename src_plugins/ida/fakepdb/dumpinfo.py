@@ -674,6 +674,7 @@ class DumpInfo():
     #
 
     def __process_general(self):
+        info_struct = None
         if ida_pro.IDA_SDK_VERSION < 900:
             info_struct = ida_idaapi.get_inf_structure()
 
