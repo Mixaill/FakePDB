@@ -20,6 +20,7 @@ import json
 import struct
 import sys
 
+import ida_pro
 import ida_bytes
 import ida_entry
 import ida_funcs
@@ -29,8 +30,9 @@ import ida_nalt
 import ida_name
 import ida_netnode
 import ida_segment
-import ida_struct
 import ida_typeinf
+if ida_pro.IDA_SDK_VERSION < 900:
+    import ida_struct
 
 
 #
@@ -313,9 +315,10 @@ class DumpInfo():
             'exports'   : self.__process_exports(),
             'functions' : self.__process_functions(),
             'names'     : self.__process_names(),
-            'structs'   : self.__process_structs(),
             'types'     : self.__process_types(),
         }
+        if ida_pro.IDA_SDK_VERSION < 900:
+            output['structs'] = self.__process_structs()
 
         with open(filepath, "w") as f:
             json.dump(output, f, indent=4)
@@ -426,8 +429,6 @@ class DumpInfo():
             return 'fastcall'
         elif cc == ida_typeinf.CM_CC_THISCALL:
             return 'thiscall'
-        elif cc == ida_typeinf.CM_CC_MANUAL:
-            return 'manual'
         elif cc == ida_typeinf.CM_CC_SPOILED:
             return 'spoiled'
         elif cc == 0xB0:
@@ -440,6 +441,10 @@ class DumpInfo():
             return 'special_pstack'
         elif cc == ida_typeinf.CM_CC_SPECIAL:
             return 'special'
+
+        if ida_pro.IDA_SDK_VERSION < 900:
+            if cc == ida_typeinf.CM_CC_MANUAL:
+                return 'manual'
 
         return 'unknown_%s' % cc
 
@@ -669,21 +674,37 @@ class DumpInfo():
     #
 
     def __process_general(self):
-        info_struct = ida_idaapi.get_inf_structure()
+        if ida_pro.IDA_SDK_VERSION < 900:
+            info_struct = ida_idaapi.get_inf_structure()
 
         #architecture
-        arch = info_struct.procname
+        arch = None
+        if ida_pro.IDA_SDK_VERSION >= 900:
+            arch = ida_ida.inf_get_procname()
+        else:
+            arch = info_struct.procname
+
         if arch == 'metapc':
             arch = 'x86'
         elif arch == 'ARM':
             arch = 'arm'
 
         #bitness
-        bitness = 16
-        if info_struct.is_64bit():
-            bitness = 64
-        elif info_struct.is_32bit():
-            bitness = 32
+        bitness = 0
+        if ida_pro.IDA_SDK_VERSION >= 900:
+            if ida_ida.inf_is_64bit():
+                bitness = 64
+            elif ida_ida.inf_is_16bit():
+                bitness = 16
+            else:
+                bitness = 32
+        else:
+            if info_struct.is_64bit():
+                bitness = 64
+            elif info_struct.is_32bit():
+                bitness = 32
+            else:
+                bitness = 16
 
         result = {
             'filename'    : ida_nalt.get_root_filename(),
@@ -698,14 +719,11 @@ class DumpInfo():
 
         for n in range(0, ida_segment.get_segm_qty()):
             seg = ida_segment.getnseg(n)
-            name = ida_segment.get_segm_name(seg)
-            if name == 'HEADER':
-                continue
             if seg:
                 segm = {
                     'align'     : self.__describe_alignment(seg.align),
                     'bitness'   : self.__describe_bitness(seg.bitness),
-                    'name'      : name,
+                    'name'      : ida_segment.get_segm_name(seg),
                     'rva_start' : seg.start_ea - self._base,
                     'rva_end'   : seg.end_ea - self._base,
                     'permission': self.__describe_permission(seg.perm),
@@ -767,8 +785,15 @@ class DumpInfo():
     def __process_functions(self):
         functions = list()
 
-        start = ida_ida.cvar.inf.min_ea
-        end   = ida_ida.cvar.inf.max_ea
+        # find EA
+        start = 0
+        end = 0
+        if ida_pro.IDA_SDK_VERSION >= 900:
+            start = ida_ida.inf_get_min_ea()
+            end = ida_ida.inf_get_max_ea()
+        else:
+            start = ida_ida.cvar.inf.min_ea
+            end   = ida_ida.cvar.inf.max_ea
 
         # find first function head chunk in the range
         chunk = ida_funcs.get_fchunk(start)
@@ -995,7 +1020,12 @@ class DumpInfo():
         localtypes = []
 
         ti_lib_obj = ida_typeinf.get_idati()
-        ti_lib_count = ida_typeinf.get_ordinal_qty(ti_lib_obj)
+
+        ti_lib_count = 0
+        if ida_pro.IDA_SDK_VERSION >= 900:
+            ida_typeinf.get_ordinal_count(ti_lib_obj)
+        else:
+            ti_lib_count = ida_typeinf.get_ordinal_qty(ti_lib_obj)
 
         for ti_ordinal in range(1, ti_lib_count + 1):
             ti_info = ida_typeinf.tinfo_t()
