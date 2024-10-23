@@ -71,6 +71,12 @@ where:
 
 * Disable PDB validation in WinDbg http://ntcoder.com/bab/2012/03/06/how-to-force-symbol-loading-in-windbg/
 
+## Mentions
+
+* [2019, Google Project Zero: The story of Adobe Reader symbols](https://googleprojectzero.blogspot.com/2019/10/the-story-of-adobe-reader-symbols.html)
+* [2021, Gerhart X.: Hyper-V debugging for beginners. 2nd edition.](https://hvinternals.blogspot.com/2021/01/hyper-v-debugging-for-beginners-2nd.html)
+* [2022, Google Cloud: Fuzzing Image Parsing in Windows, Part Four: More HEIF](https://cloud.google.com/blog/topics/threat-intelligence/fuzzing-image-parsing-windows-part-four/)
+
 ## Thanks
 
 Inspired by:
