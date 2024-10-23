@@ -16,12 +16,14 @@
 """
 
 
+import ida_pro
 import ida_bytes
 import ida_ida
 import ida_idaapi
-import ida_search
+import ida_nalt
 import ida_ua
 import ida_xref
+
 
 class SignatureFinder:
     def __init__(self):
@@ -88,13 +90,24 @@ class SignatureFinder:
         return '? ' * count
 
     def __search_resultcount(self, signature): 
-        search_addr = ida_ida.cvar.inf.min_ea
         search_results = 0
+     
+        if ida_pro.IDA_SDK_VERSION >= 900:
+            addr_start = ida_ida.inf_get_min_ea()
+            addr_stop = ida_ida.inf_get_max_ea()
+        else:
+            addr_start = ida_ida.cvar.inf.min_ea
+            addr_stop = ida_ida.cvar.inf.max_ea
 
+    
         while search_results < 2:
-            search_addr = ida_search.find_binary(search_addr, ida_ida.cvar.inf.max_ea, signature, 16, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
-            if search_addr == ida_idaapi.BADADDR:
+            search_pattern = ida_bytes.compiled_binpat_vec_t()
+            ida_bytes.parse_binpat_str(search_pattern, addr_start, signature, 16, ida_nalt.get_default_encoding_idx(ida_nalt.BPU_1B))
+   
+            addr_start = ida_bytes.bin_search(addr_start, addr_stop, search_pattern, ida_bytes.BIN_SEARCH_CASE)[0]
+            if addr_start == ida_idaapi.BADADDR:
                 break
+            addr_start = addr_start + 1
             search_results += 1
 
         return search_results
