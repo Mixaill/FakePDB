@@ -3,25 +3,16 @@
 Tool for PDB generation from IDA Pro database
 
 Supports:
-* IDA >= 7.4
+* IDA >= 7.4 
 
-## TODO
+## Download
 
-* Linux support
-* GHIDRA support
-* Function arguments support
-
-## How to get
-
-* Download latest release from release page: https://github.com/Mixaill/FakePDB/releases
-* Or compile it from sources:
-   * run `<repository_root>/build.ps1`
-   * grab `fakepdb.zip` from `<repository_root>/~build/deploy`
+* [Windows AMD64](https://nightly.link/Mixaill/FakePDB/workflows/CI/master/binaries.zip)
 
 ## How to install
 
 * IDA
-  * copy content of `fakepdb.zip/ida` to `<IDA_directory>/plugins`
+  * copy content of `binaries.zip/ida` to `<IDA_directory>/plugins`
 
 ## How to use
 
@@ -68,6 +59,13 @@ where:
  * `XXXX`: number of the PE section
  * `YYYY`: offset from the begining of the section in decimal numbers
  * 0x0124567AF: IDA effective address
+
+## TODO
+
+* Linux support
+* GHIDRA support
+* Function arguments support
+* IDA 9.0: structures export
 
 ## Useful links
 
