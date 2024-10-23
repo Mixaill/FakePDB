@@ -1,20 +1,20 @@
-name: CI
-
 on:
-  workflow_dispatch:
   push:
-    branches: master
+    branches: [ "master" ]
   pull_request:
-    branches: master
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: Trass3r/setup-cpp@master
-    - run: ./build.ps1
-    - uses: actions/upload-artifact@v3
+    - uses: actions/checkout@v4
+
+    - name: Build
+      run: ./build.ps1
+
+    - uses: actions/upload-artifact@v4
       with:
         name: binaries
         path: ~build/deploy/*.zip
