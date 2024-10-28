@@ -69,7 +69,8 @@ where:
 
 ## Useful links
 
-* Disable PDB validation in WinDbg http://ntcoder.com/bab/2012/03/06/how-to-force-symbol-loading-in-windbg/
+* Disable PDB validation in WinDbg [http://ntcoder.com/bab/2012/03/06/how-to-force-symbol-loading-in-windbg/](https://web.archive.org/web/20200130221144/http://ntcoder.com/bab/2012/03/06/how-to-force-symbol-loading-in-windbg/)
+* Disable PDB validation in MSVS https://stackoverflow.com/questions/38147487/forcing-to-load-unmatched-symbols-in-visual-studio-2015-debugger
 
 ## Mentions
 
