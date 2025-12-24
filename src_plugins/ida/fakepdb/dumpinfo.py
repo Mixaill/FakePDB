@@ -39,6 +39,17 @@ if ida_pro.IDA_SDK_VERSION < 900:
 # PE
 #
 
+
+def safe_str(value, counter, default="UNKNOWN"):
+    if value is None:
+        return default + str(counter)
+    if isinstance(value, str):
+        if value.strip() == "":
+            return default + str(counter)
+        return value
+    return str(value)
+
+
 class PE_Struct(object):
 
     def __init__(self, packinfo, data):
@@ -718,6 +729,7 @@ class DumpInfo():
     def __process_segments(self):
         segments = list()
 
+        unkIdx = 0
         for n in range(0, ida_segment.get_segm_qty()):
             seg = ida_segment.getnseg(n)
             if seg:
@@ -731,7 +743,35 @@ class DumpInfo():
                     'selector'  : seg.sel,
                     'type'      : ida_segment.get_segm_class(seg),
                 }
-                
+
+
+
+                problem = False
+
+                segm['name'] = safe_str(segm.get('name'), unkIdx)
+                if segm['name'].startswith("UNKNOWN"):
+                    problem = True
+                    print('Encountered a nameless segment:')
+                    print(f"    location: {seg.start_ea:X} => try analyzing this address")
+                    print("    Segment name changed to: " + segm['name'] + '\n')
+
+                segm['permission'] = safe_str(segm.get('permission'), unkIdx)
+                if segm['permission'].startswith("UNKNOWN"):
+                    problem = True
+                    print('Encountered a segment permission problem:')
+                    print(f"    name: {segm['name']}  location: {seg.start_ea:X} => try analyzing")
+                    print("    Segment permission changed to: " + segm['permission'] + '\n')
+
+                segm['type'] = safe_str(segm.get('type'), unkIdx)
+                if segm['type'].startswith("UNKNOWN"):
+                    problem = True
+                    print('Encountered a segment type problem:')
+                    print(f"    name: {segm['name']}  location: {seg.start_ea:X} => try analyzing")
+                    print("    Segment type changed to: " + segm['type'] + '\n')
+
+                if problem:
+                    unkIdx = unkIdx + 1
+
                 segments.append(segm)
 
         return segments
@@ -806,6 +846,7 @@ class DumpInfo():
         
         func = chunk
 
+        unkIdx = 0
         while func and func.start_ea < end:
             start_ea = func.start_ea
             
@@ -822,6 +863,13 @@ class DumpInfo():
                 'is_public'     : func_public,
                 'is_autonamed'  : func_autonamed
             }
+
+            function['name'] = safe_str(function.get('name'), unkIdx )
+            if function['name'].startswith("UNKNOWN"):
+                unkIdx = unkIdx + 1
+                print('Encountered a nameless function:')
+                print(f"    location: {start_ea:X} => try analyzing this address")
+                print("    Function name changed to: " + function['name'] + '\n')
 
             # PE32/PE32+ only support binaries up to 2GB
             if function['start_rva'] >= 2**32:
@@ -840,6 +888,7 @@ class DumpInfo():
     def __process_names(self):
         names = list()
 
+        unkIdx = 0
         for i in range(0, ida_name.get_nlist_size()):
             ea = ida_name.get_nlist_ea(i)
             if ida_funcs.get_func(ea) is not None:
@@ -855,6 +904,13 @@ class DumpInfo():
                 'is_public'      : ida_name.is_public_name(ea),
                 'is_func'        : ida_funcs.get_func(ea) is not None
             }
+
+            name['name'] = safe_str(name.get('name'), unkIdx)
+            if name['name'] == "UNKNOWN":
+                unkIdx = unkIdx + 1
+                print('Encountered a null Name:')
+                print(f"    location: {ea:X} => try analyzing this address")
+                print("    Name changed to: " + name['name'] + '\n')
 
             # PE32/PE32+ only support binaries up to 2GB
             if name['rva'] >= 2**32:
