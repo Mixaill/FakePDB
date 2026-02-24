@@ -665,6 +665,10 @@ class DumpInfo():
         ida_nalt.get_tinfo(tinfo, ea)
         func_type_data = ida_typeinf.func_type_data_t()
         tinfo.get_func_details(func_type_data)
+
+        # workaround for IDA 9.3 missing .cc field
+        if not ("cc" in func_type_data):
+            func_type_data.cc = func_type_data.get_cc()
         
         return func_type_data
 
