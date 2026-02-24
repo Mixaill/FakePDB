@@ -4,8 +4,11 @@
 # Config
 #
 
-$build_llvm = $true
-$generate_msvc = $false
+param (
+    [switch] $build_llvm = $false,
+    [switch] $install_llvm = $false,
+    [switch] $generate_msvc = $false
+)
 
 #
 # Set root dir
@@ -30,15 +33,15 @@ function Get-OS()
         return "windows"
     }
 
-    if($PSVersionTable.OS.StartsWith("Linux"))
+    if(Get-Command "uname" -errorAction SilentlyContinue)
     {
-        return "linux"
+        return "$(uname -s)".ToLower()
     }
 
     return "unknown"
 }
 
-
+# the return value needs to match Python's platform.machine().lower()
 function Get-Architecture()
 {
     $os = Get-OS
@@ -55,17 +58,15 @@ function Get-Architecture()
             {
                 return "i686"
             }
-        }
-    }
-    elseif($os -eq "linux")
-    {
-        switch ($(uname -m))
-        {
-            x86_64
+            ARM64
             {
-                return "amd64"
+                return "arm64"
             }
         }
+    }
+    elseif(Get-Command "uname" -errorAction SilentlyContinue)
+    {
+        return "$(uname -m)".ToLower()
     }
 
     return "Unknown"
@@ -164,6 +165,23 @@ function Build-LLVM(){
     cmake --install "./~build/llvm_build"
 }
 
+function Install-LLVM(){
+    #$llvm_version = "$(llvm-cov --version)" -replace '[^\d]*(\d+(\.\d+){1,3})[^\d]*', '$1'
+    $llvm_version = "21.1.5"
+    $url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$llvm_version/clang+llvm-$llvm_version-x86_64-pc-windows-msvc.tar.xz"
+    Invoke-WebRequest -Uri $url -OutFile llvm.tar.xz
+    tar -xzf llvm.tar.xz
+    mkdir -p "$root/~build/llvm_install"
+    Move-Item "clang+llvm-$llvm_version-x86_64-pc-windows-msvc/*" "$root/~build/llvm_install"
+    Get-ChildItem "$root/~build/llvm_install"
+    $env:PATH = "$(Get-Location)\~build\llvm_install\bin;" + $env:PATH
+    #llvm-config --version
+
+    # workaround
+    mkdir -p "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\DIA SDK\lib\amd64"
+    Copy-Item "$env:VSINSTALLDIR\DIA SDK\lib\amd64\diaguids.lib" "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\DIA SDK\lib\amd64\diaguids.lib"
+}
+
 function Build-FakePDB(){
     if ($generate_msvc -eq $true) {
         cmake "./src_cpp/" `
@@ -195,6 +213,9 @@ function Build(){
     if($true -eq $build_llvm){
         Build-LLVM
     }
+    elseif($true -eq $install_llvm){
+        Install-LLVM
+    }
 
     Build-FakePDB
 
@@ -220,8 +241,8 @@ function Build(){
     #
     # Pack files
     #
-    Remove-Item -Path "./~build/deploy/fakepdb.zip" -ErrorAction SilentlyContinue
-    Compress-Archive -Path "./~build/deploy/*" -DestinationPath "./~build/deploy/fakepdb.zip"
+    Remove-Item -Path "./~build/fakepdb.zip" -ErrorAction SilentlyContinue
+    Compress-Archive -Path "./~build/deploy/*" -DestinationPath "./~build/fakepdb.zip"
       
 }
 

@@ -3,18 +3,29 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 1 * *"
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
 
+    - name: Build (install LLVM)
+      if: ${{ runner.os == 'Windows' }}
+      run: ./build.ps1 -install_llvm
+
     - name: Build
+      if: ${{ runner.os != 'Windows' }}
       run: ./build.ps1
 
     - uses: actions/upload-artifact@v4
       with:
-        name: binaries
-        path: ~build/deploy/*.zip
+        name: fakepdb-${{ runner.os }}-${{ runner.arch }}
+        path: ~build/deploy/

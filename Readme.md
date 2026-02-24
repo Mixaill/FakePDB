@@ -3,16 +3,23 @@
 Tool for PDB generation from IDA Pro database
 
 Supports:
-* IDA >= 7.4 
+
+* IDA >= 7.4
 
 ## Download
 
-* [Windows AMD64](https://nightly.link/Mixaill/FakePDB/workflows/CI/master/binaries.zip)
+### GitHub Actions CI downloads
 
-## How to install
+* [Windows x86_64](https://nightly.link/Mixaill/FakePDB/workflows/CI/master/fakepdb-Windows-X64.zip)
+* [Linux x86_64](https://nightly.link/Mixaill/FakePDB/workflows/CI/master/fakepdb-Linux-X64.zip)
 
-* IDA
-  * copy content of `binaries.zip/ida` to `<IDA_directory>/plugins`
+How to install: copy contents of `fakepdb-*.zip/ida` to `<IDA_directory>/plugins`
+
+### Third-party Linux packages
+
+* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ida-pro-plugin-fakepdb-git)
+
+How to install: `paru -S ida-pro-plugin-fakepdb-git`
 
 ## How to use
 
