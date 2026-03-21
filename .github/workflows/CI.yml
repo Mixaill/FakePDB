@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
+w
     - name: Build
       run: ./build.ps1
 
