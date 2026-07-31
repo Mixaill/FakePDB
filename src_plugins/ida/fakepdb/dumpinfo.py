@@ -660,6 +660,15 @@ class DumpInfo():
     # private/get
     #
 
+    def __get_func_calling_convention(self, func_type_data):
+        #func_type_data_t.cc is not available in IDA 9.4
+        #use get_cc() but retain cc for older IDA versions
+        get_cc = getattr(func_type_data, 'get_cc', None)
+        if callable(get_cc):
+            return get_cc()
+
+        return func_type_data.cc
+
     def __get_type_data(self, ea):
         tinfo = ida_typeinf.tinfo_t()
         ida_nalt.get_tinfo(tinfo, ea)
@@ -739,11 +748,12 @@ class DumpInfo():
     def __process_function_typeinfo(self, info, func):
 
         func_type_data = self.__get_type_data(func.start_ea)
+        calling_convention = self.__get_func_calling_convention(func_type_data)
 
         #calling convention
-        info['calling_convention'] = self.__describe_callingconvention(func_type_data.cc)
-        info['memory_model_code']  = self.__describe_memorymodel_code(func_type_data.cc)
-        info['memory_model_data']  = self.__describe_memorymodel_data(func_type_data.cc)
+        info['calling_convention'] = self.__describe_callingconvention(calling_convention)
+        info['memory_model_code']  = self.__describe_memorymodel_code(calling_convention)
+        info['memory_model_data']  = self.__describe_memorymodel_data(calling_convention)
 
         #return type
         info['return_type'] = ida_typeinf.print_tinfo('', 0, 0, ida_typeinf.PRTYPE_1LINE, func_type_data.rettype, '', '')
@@ -880,12 +890,14 @@ class DumpInfo():
             elif ida_bytes.is_data(flags):
                 type = 'data'
 
+            calling_convention = self.__get_func_calling_convention(type_data)
+
             export = {
                 'ordinal'           : ordinal,
                 'rva'               : ea - self._base,
                 'name'              : ida_entry.get_entry_name(ordinal),
                 'type'              : type,
-                'calling_convention': self.__describe_callingconvention(type_data.cc)
+                'calling_convention': self.__describe_callingconvention(calling_convention)
             }
 
             exports.append(export)
